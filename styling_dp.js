@@ -218,38 +218,39 @@
 				this._fillFormats(null);
 				this._format = this.$.format.value;
 				this._syncVisibility();
-				this._submit();
+				this._send('dateMode', this._dateMode);
+				this._send('format', this._format);
 			}.bind(this));
 
 			this.$.format.addEventListener('change', function () {
 				this._format = this.$.format.value;
-				this._submit();
+				this._send('format', this._format)
 			}.bind(this));
 
 			this.$.weekRule.addEventListener('change', function () {
 				this._weekRule = this.$.weekRule.value;
 				this._updateHint();
-				this._submit();
+				this._send('weekRule', this._weekRule)
 			}.bind(this));
 
 			this.$.theme.addEventListener('change', function () {
 				this._darktheme = this.$.theme.checked;
-				this._submit();
+				this._send('darktheme', this._darktheme)
 			}.bind(this));
 
 			this.$.range.addEventListener('change', function () {
 				this._enablerange = this.$.range.checked;
-				this._submit();
+				this._send('enablerange', this._enablerange)
 			}.bind(this));
 
 			this.$.minDate.addEventListener('change', function () {
 				this._minDateVal = fromInputValue(this.$.minDate.value);
-				this._submit();
+				this._send('minDateVal', this._minDateVal)
 			}.bind(this));
 
 			this.$.maxDate.addEventListener('change', function () {
 				this._maxDateVal = fromInputValue(this.$.maxDate.value);
-				this._submit();
+				this._send('maxDateVal', this._maxDateVal)
 			}.bind(this));
 
 			this._fillFormats(this._format);
@@ -261,18 +262,36 @@
 			this._render();
 		}
 
-		// SAC 가 현재 값을 밀어 넣는 지점
-		set properties (v) {
-			if (!v) return;
-			if ('dateMode'    in v) this._dateMode    = v.dateMode || 'day';
-			if ('format'      in v) this._format      = v.format || '';
-			if ('weekRule'    in v) this._weekRule    = v.weekRule || 'ISO';
-			if ('darktheme'   in v) this._darktheme   = !!v.darktheme;
-			if ('enablerange' in v) this._enablerange = !!v.enablerange;
-			if ('minDateVal'  in v) this._minDateVal  = v.minDateVal ? new Date(v.minDateVal) : null;
-			if ('maxDateVal'  in v) this._maxDateVal  = v.maxDateVal ? new Date(v.maxDateVal) : null;
+		// SAC 가 값을 밀어 넣는 지점.
+		// 트리 위젯은 onCustomWidgetAfterUpdate 를, nkappler 는 개별 setter 를 쓴다.
+		// 어느 쪽이 호출되든 동작하도록 둘 다 둔다.
+		onCustomWidgetAfterUpdate (changed) {
+			if (!changed) return;
+			if ('dateMode'    in changed) this._dateMode    = changed.dateMode || 'day';
+			if ('format'      in changed) this._format      = changed.format || '';
+			if ('weekRule'    in changed) this._weekRule    = changed.weekRule || 'ISO';
+			if ('darktheme'   in changed) this._darktheme   = !!changed.darktheme;
+			if ('enablerange' in changed) this._enablerange = !!changed.enablerange;
+			if ('minDateVal'  in changed) this._minDateVal  = changed.minDateVal ? new Date(changed.minDateVal) : null;
+			if ('maxDateVal'  in changed) this._maxDateVal  = changed.maxDateVal ? new Date(changed.maxDateVal) : null;
 			this._render();
 		}
+
+		set dateMode    (v) { this._dateMode    = v || 'day';  this._render(); }
+		set format      (v) { this._format      = v || '';     this._render(); }
+		set weekRule    (v) { this._weekRule    = v || 'ISO';  this._render(); }
+		set darktheme   (v) { this._darktheme   = !!v;         this._render(); }
+		set enablerange (v) { this._enablerange = !!v;         this._render(); }
+		set minDateVal  (v) { this._minDateVal  = v ? new Date(v) : null; this._render(); }
+		set maxDateVal  (v) { this._maxDateVal  = v ? new Date(v) : null; this._render(); }
+
+		get dateMode    () { return this._dateMode; }
+		get format      () { return this._format; }
+		get weekRule    () { return this._weekRule; }
+		get darktheme   () { return this._darktheme; }
+		get enablerange () { return this._enablerange; }
+		get minDateVal  () { return this._minDateVal; }
+		get maxDateVal  () { return this._maxDateVal; }
 
 		_fillFormats (keep) {
 			var list = FORMATS[this._dateMode] || FORMATS.day;
@@ -319,19 +338,13 @@
 			this._updateHint();
 		}
 
-		_submit () {
+		// 트리 위젯과 동일하게 "바뀐 것 하나만" 보낸다.
+		// 전체를 매번 보내면 아직 수신하지 못한 값들이 초기값으로 덮어써진다.
+		_send (name, value) {
 			this.dispatchEvent(new CustomEvent('propertiesChanged', {
-				detail: {
-					properties: {
-						dateMode:    this._dateMode,
-						format:      this._format,
-						weekRule:    this._weekRule,
-						darktheme:   this._darktheme,
-						enablerange: this._enablerange,
-						minDateVal:  this._minDateVal,
-						maxDateVal:  this._maxDateVal
-					}
-				}
+				detail: { properties: { [name]: value } },
+				bubbles: true,
+				composed: true
 			}));
 		}
 	}
