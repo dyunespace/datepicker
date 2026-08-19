@@ -1,0 +1,157 @@
+{
+	"eula": "",
+	"vendor": "dyunespace",
+	"license": "",
+	"id": "com.sap.sac.datepicker.glp",
+	"version": "1.0.0",
+	"name": "Datepicker Widget",
+	"description": "Datepicker SAPUI5 for GLP",
+	"icon": "sap-icon://appointment-2",
+	"newInstancePrefix": "Datepicker",
+	"webcomponents": [
+		{
+			"kind": "main",
+			"tag": "com-sap-sac-datepicker-glp-main",
+			"url": "https://dyunespace.github.io/datepicker/script_dp.js?v=20250819a",
+			"integrity": "",
+			"ignoreIntegrity": true
+		},
+		{
+			"kind": "styling",
+			"tag": "com-sap-sac-datepicker-glp-styling",
+			"url": "https://dyunespace.github.io/datepicker/styling_dp.js?v=20250819a",
+			"integrity": "",
+			"ignoreIntegrity": true
+		}
+	],
+	"properties": {
+		"width": {
+			"type": "integer",
+			"default": 192
+		},
+		"height": {
+			"type": "integer",
+			"default": 32
+		},
+		"dateVal": {
+			"type": "Date",
+			"description": "default (start) date"
+		},
+		"secondDateVal": {
+			"type": "Date",
+			"description": "default end date (range mode)"
+		},
+		"dateMode": {
+			"type": "string",
+			"default": "day",
+			"description": "date | week | month"
+		},
+		"format": {
+			"type": "string",
+			"description": "date format (varies by dateMode)",
+			"default": ""
+		},
+		"darktheme": {
+			"type": "boolean",
+			"default": false
+		},
+		"enablerange": {
+			"type": "boolean",
+			"default": false
+		},
+		"minDateVal": {
+			"type": "Date",
+			"description": "The minimum Date value that can be selected. (optional)"
+		},
+		"maxDateVal": {
+			"type": "Date",
+			"description": "The maximum Date value that can be selected. (optional)"
+		}
+	},
+	"methods": {
+		"clear": {
+			"description": "unset the selected date value"
+		},
+		"getDateVal": {
+			"returnType": "Date",
+			"description": "get the date. (start date if range selection is enabled, returns undefined when no date is selected)",
+			"parameters": []
+		},
+		"setDateVal": {
+			"description": "set the date. (start date if range selection is enabled)",
+			"parameters": [
+				{
+					"name": "dv",
+					"type": "Date",
+					"description": "The new date"
+				}
+			]
+		},
+		"getSecondDateVal": {
+			"returnType": "Date",
+			"description": "get the end date. (returns undefined if range selection is not enabled)",
+			"parameters": []
+		},
+		"setSecondDateVal": {
+			"description": "set the end date. (has no effect if range selection is not enabled)",
+			"parameters": [
+				{
+					"name": "dv",
+					"type": "Date",
+					"description": "The new date"
+				}
+			]
+		},
+		"getFormattedVal": {
+			"returnType": "string",
+			"description": "get the formatted date string according to dateMode (day: yyyy.MM.dd, week: yyyy.ww, month: yyyy.MM)",
+			"parameters": []
+		},
+		"isRangeEnabled": {
+			"description": "Returns whether range selection is enabled",
+			"parameters": [],
+			"returnType": "boolean"
+		},
+		"getMinimumDateVal": {
+			"returnType": "Date",
+			"description": "get the date minimum. (might return undefined if value is not set)",
+			"parameters": []
+		},
+		"setMinimumDateVal": {
+			"description": "set the date minimum.",
+			"parameters": [
+				{
+					"name": "dv",
+					"type": "Date",
+					"description": "The new minimum date"
+				}
+			]
+		},
+		"clearMinimumDateVal": {
+			"description": "clear the date minimum."
+		},
+		"getMaximumDateVal": {
+			"returnType": "Date",
+			"description": "get the date maximum. (might return undefined if value is not set)",
+			"parameters": []
+		},
+		"setMaximumDateVal": {
+			"description": "set the date maximum.",
+			"parameters": [
+				{
+					"name": "dv",
+					"type": "Date",
+					"description": "The new maximum date"
+				}
+			]
+		},
+		"clearMaximumDateVal": {
+			"description": "clear the date maximum."
+		}
+	},
+	"events": {
+		"onChange": {
+			"description": "Called when the user changes the selected date."
+		}
+	}
+}
