@@ -201,8 +201,14 @@
 			var needFormat  = false;
 
 			if ('enablerange' in changed) {
-				this._enablerange = !!changed.enablerange;
-				needRebuild = true;                       // 컨트롤 클래스가 바뀐다
+				var er = !!changed.enablerange;
+				// 값이 실제로 달라졌을 때만 재생성한다.
+				// SAC 가 변경 없는 프로퍼티까지 함께 보내는 경우가 있어,
+				// 무조건 재생성하면 선택값이 사라지고 화면이 깜빡인다.
+				if (er !== this._enablerange) {
+					this._enablerange = er;
+					needRebuild = true;                   // 컨트롤 클래스가 바뀐다
+				}
 			}
 			if ('dateMode' in changed) {
 				this._dateMode = changed.dateMode || 'day';
