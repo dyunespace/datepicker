@@ -6,20 +6,20 @@
 	"version": "1.0.0",
 	"name": "Datepicker Widget",
 	"description": "Datepicker SAPUI5 for GLP",
-	"icon": "sap-icon://appointment-2",
+	"icon": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0iIzM0NjE4NyIgZD0iTTE5LjQsNC40aC0uODhWMi45NEgxNy4wNlY0LjRINy40VjIuOTRINS45M1Y0LjRINS4wNUEyLjIsMi4yLDAsMCwwLDIuODYsNi42VjE5LjQ4YTIuMiwyLjIsMCwwLDAsMi4xOSwyLjJIMTkuNGEyLjIsMi4yLDAsMCwwLDIuMTktMi4yVjYuNkEyLjIsMi4yLDAsMCwwLDE5LjQsNC40Wm0uNzMsMTUuMDhhLjczLjczLDAsMCwxLS43My43M0g1LjA1YS43My43MywwLDAsMS0uNzMtLjczVjkuODJIMjAuMTNabTAtMTEuMTJINC4zMlY2LjZhLjczLjczLDAsMCwxLC43My0uNzNoLjg4VjcuMzNINy40VjUuODdoOS42NlY3LjMzaDEuNDZWNS44N2guODhhLjczLjczLDAsMCwxLC43My43M1oiLz48cmVjdCBmaWxsPSIjMzQ2MTg3IiB4PSI1LjY0IiB5PSIxMS4zNiIgd2lkdGg9IjEuNDYiIGhlaWdodD0iMS40NiIvPjxyZWN0IGZpbGw9IiMzNDYxODciIHg9IjguNTciIHk9IjExLjM2IiB3aWR0aD0iMS40NiIgaGVpZ2h0PSIxLjQ2Ii8+PHJlY3QgZmlsbD0iIzM0NjE4NyIgeD0iMTEuNDkiIHk9IjExLjM2IiB3aWR0aD0iMS40NiIgaGVpZ2h0PSIxLjQ2Ii8+PHJlY3QgZmlsbD0iIzM0NjE4NyIgeD0iMTQuNDIiIHk9IjExLjM2IiB3aWR0aD0iMS40NiIgaGVpZ2h0PSIxLjQ2Ii8+PHJlY3QgZmlsbD0iIzM0NjE4NyIgeD0iMTcuMzUiIHk9IjExLjM2IiB3aWR0aD0iMS40NiIgaGVpZ2h0PSIxLjQ2Ii8+PHJlY3QgZmlsbD0iIzM0NjE4NyIgeD0iNS42NCIgeT0iMTQuMjgiIHdpZHRoPSIxLjQ2IiBoZWlnaHQ9IjEuNDYiLz48cmVjdCBmaWxsPSIjMzQ2MTg3IiB4PSI4LjU3IiB5PSIxNC4yOCIgd2lkdGg9IjEuNDYiIGhlaWdodD0iMS40NiIvPjxyZWN0IGZpbGw9IiMzNDYxODciIHg9IjExLjQ5IiB5PSIxNC4yOCIgd2lkdGg9IjEuNDYiIGhlaWdodD0iMS40NiIvPjxyZWN0IGZpbGw9IiMzNDYxODciIHg9IjE0LjQyIiB5PSIxNC4yOCIgd2lkdGg9IjEuNDYiIGhlaWdodD0iMS40NiIvPjxyZWN0IGZpbGw9IiMzNDYxODciIHg9IjUuNjQiIHk9IjE3LjIxIiB3aWR0aD0iMS40NiIgaGVpZ2h0PSIxLjQ2Ii8+PHJlY3QgZmlsbD0iIzM0NjE4NyIgeD0iOC41NyIgeT0iMTcuMjEiIHdpZHRoPSIxLjQ2IiBoZWlnaHQ9IjEuNDYiLz48cmVjdCBmaWxsPSIjMzQ2MTg3IiB4PSIxMS40OSIgeT0iMTcuMjEiIHdpZHRoPSIxLjQ2IiBoZWlnaHQ9IjEuNDYiLz48cmVjdCBmaWxsPSIjMzQ2MTg3IiB4PSIxNC40MiIgeT0iMTcuMjEiIHdpZHRoPSIxLjQ2IiBoZWlnaHQ9IjEuNDYiLz48cmVjdCBmaWxsPSIjMzQ2MTg3IiB4PSIxNy4zNSIgeT0iMTQuMjgiIHdpZHRoPSIxLjQ2IiBoZWlnaHQ9IjEuNDYiLz48L3N2Zz4=",
 	"newInstancePrefix": "Datepicker",
 	"webcomponents": [
 		{
 			"kind": "main",
 			"tag": "com-sap-sac-datepicker-glp-main",
-			"url": "https://dyunespace.github.io/datepicker/script_dp.js?v=20250819a",
+			"url": "https://dyunespace.github.io/datepicker/script_dp.js?v=20260819a",
 			"integrity": "",
 			"ignoreIntegrity": true
 		},
 		{
 			"kind": "styling",
 			"tag": "com-sap-sac-datepicker-glp-styling",
-			"url": "https://dyunespace.github.io/datepicker/styling_dp.js?v=20250819a",
+			"url": "https://dyunespace.github.io/datepicker/styling_dp.js?v=20260819a",
 			"integrity": "",
 			"ignoreIntegrity": true
 		}
@@ -44,7 +44,12 @@
 		"dateMode": {
 			"type": "string",
 			"default": "day",
-			"description": "date | week | month"
+			"description": "day | week | month"
+		},
+		"weekRule": {
+			"type": "string",
+			"default": "ISO",
+			"description": "week numbering rule. ISO = Monday start, week containing first Thursday is week 1 | JAN1 = Monday start, week containing Jan 1 is week 1 | US = Sunday start, week containing Jan 1 is week 1"
 		},
 		"format": {
 			"type": "string",
@@ -85,7 +90,8 @@
 					"type": "Date",
 					"description": "The new date"
 				}
-			]
+			],
+			"body": "this.dateVal = dv;"
 		},
 		"getSecondDateVal": {
 			"returnType": "Date",
@@ -100,22 +106,30 @@
 					"type": "Date",
 					"description": "The new date"
 				}
-			]
+			],
+			"body": "this.secondDateVal = dv;"
 		},
 		"getFormattedVal": {
 			"returnType": "string",
-			"description": "get the formatted date string according to dateMode (day: yyyy.MM.dd, week: yyyy.ww, month: yyyy.MM)",
+			"description": "get the formatted string for the selected value. day: yyyy.MM.dd | week: YYYY.ww (YYYY = week-based year, may differ from calendar year) | month: yyyy.MM",
+			"parameters": []
+		},
+		"getSecondFormattedVal": {
+			"returnType": "string",
+			"description": "get the formatted string for the end value. returns empty string if range selection is not enabled",
 			"parameters": []
 		},
 		"isRangeEnabled": {
 			"description": "Returns whether range selection is enabled",
 			"parameters": [],
-			"returnType": "boolean"
+			"returnType": "boolean",
+			"body": "return this.enablerange;"
 		},
 		"getMinimumDateVal": {
 			"returnType": "Date",
 			"description": "get the date minimum. (might return undefined if value is not set)",
-			"parameters": []
+			"parameters": [],
+			"body": "return this.minDateVal || undefined;"
 		},
 		"setMinimumDateVal": {
 			"description": "set the date minimum.",
@@ -125,15 +139,18 @@
 					"type": "Date",
 					"description": "The new minimum date"
 				}
-			]
+			],
+			"body": "this.minDateVal = dv;"
 		},
 		"clearMinimumDateVal": {
-			"description": "clear the date minimum."
+			"description": "clear the date minimum.",
+			"body": "this.minDateVal = undefined;"
 		},
 		"getMaximumDateVal": {
 			"returnType": "Date",
 			"description": "get the date maximum. (might return undefined if value is not set)",
-			"parameters": []
+			"parameters": [],
+			"body": "return this.maxDateVal || undefined;"
 		},
 		"setMaximumDateVal": {
 			"description": "set the date maximum.",
@@ -143,10 +160,12 @@
 					"type": "Date",
 					"description": "The new maximum date"
 				}
-			]
+			],
+			"body": "this.maxDateVal = dv;"
 		},
 		"clearMaximumDateVal": {
-			"description": "clear the date maximum."
+			"description": "clear the date maximum.",
+			"body": "this.maxDateVal = undefined;"
 		}
 	},
 	"events": {
