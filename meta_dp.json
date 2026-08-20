@@ -12,14 +12,14 @@
 		{
 			"kind": "main",
 			"tag": "com-sap-sac-datepicker-glp-main",
-			"url": "https://dyunespace.github.io/datepicker/script_dp.js?v=20260820c",
+			"url": "https://dyunespace.github.io/datepicker/script_dp.js?v=20260820d",
 			"integrity": "",
 			"ignoreIntegrity": true
 		},
 		{
 			"kind": "styling",
 			"tag": "com-sap-sac-datepicker-glp-styling",
-			"url": "https://dyunespace.github.io/datepicker/styling_dp.js?v=20260820c",
+			"url": "https://dyunespace.github.io/datepicker/styling_dp.js?v=20260820d",
 			"integrity": "",
 			"ignoreIntegrity": true
 		}
@@ -59,6 +59,26 @@
 		"enablerange": {
 			"type": "boolean",
 			"default": false
+		},
+		"fontFamily": {
+			"type": "string",
+			"default": "",
+			"description": "CSS font-family. empty = inherit from SAC theme (Default)"
+		},
+		"fontSize": {
+			"type": "integer",
+			"default": 0,
+			"description": "font size in px. 0 = inherit from SAC theme (Default)"
+		},
+		"fontStyle": {
+			"type": "string",
+			"default": "Regular",
+			"description": "Regular | Italic | Bold | Bold Italic"
+		},
+		"fontColor": {
+			"type": "string",
+			"default": "",
+			"description": "text color as hex. empty = inherit from SAC theme (Default)"
 		},
 		"minDateVal": {
 			"type": "Date",
