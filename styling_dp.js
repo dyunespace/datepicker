@@ -11,7 +11,9 @@
 (function () {
 	'use strict';
 
-	var TAG = 'com-sap-sac-datepicker-glp-styling';
+	var TAG   = 'com-sap-sac-datepicker-glp-styling';
+	var BUILD = '20260820b';   // 캐시 확인용. meta_dp.json 의 ?v= 값과 같아야 한다.
+	console.log('[datepicker] styling build ' + BUILD);
 
 	// 모드별 형식 선택지. value 가 실제 displayFormat 패턴.
 	var FORMATS = {
