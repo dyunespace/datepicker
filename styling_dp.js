@@ -65,6 +65,11 @@
 			border: 1px solid #346187;
 			cursor: pointer;
 		}
+		/* 원본과 동일한 방식.
+		   셀렉트를 20px 넓혀 브라우저 기본 화살표를 감싸는 div 밖으로 밀어내고,
+		   div.select 의 overflow:hidden 으로 잘라낸다.
+		   결과적으로 ::after 로 그린 fpa-icons 화살표 하나만 보인다. */
+		${TAG} > div.select > select { width: calc(100% + 20px); }
 		${TAG} > div.select { position: relative; overflow: hidden; }
 		${TAG} > div.select::after {
 			content: "\\e7ac";
@@ -157,9 +162,6 @@
 		</div>
 		<p class="hint" id="weekRuleHint"></p>
 
-		<p>Theme</p>
-		<label class="checkbox"><input type="checkbox" id="theme" /><div class="checkmark"></div>Use dark theme</label>
-
 		<p>Miscellaneous</p>
 		<label class="checkbox"><input type="checkbox" id="range" /><div class="checkmark"></div>Enable date range selection</label>
 
@@ -193,7 +195,6 @@
 			this._dateMode    = 'day';
 			this._format      = '';
 			this._weekRule    = 'ISO';
-			this._darktheme   = false;
 			this._enablerange = false;
 			this._minDateVal  = null;
 			this._maxDateVal  = null;
@@ -205,7 +206,6 @@
 				weekRuleWrap:  this.querySelector('#weekRuleWrap'),
 				weekRuleLabel: this.querySelector('#weekRuleLabel'),
 				weekRuleHint:  this.querySelector('#weekRuleHint'),
-				theme:         this.querySelector('#theme'),
 				range:         this.querySelector('#range'),
 				minDate:       this.querySelector('#minDate'),
 				maxDate:       this.querySelector('#maxDate')
@@ -231,11 +231,6 @@
 				this._weekRule = this.$.weekRule.value;
 				this._updateHint();
 				this._send('weekRule', this._weekRule)
-			}.bind(this));
-
-			this.$.theme.addEventListener('change', function () {
-				this._darktheme = this.$.theme.checked;
-				this._send('darktheme', this._darktheme)
 			}.bind(this));
 
 			this.$.range.addEventListener('change', function () {
@@ -270,7 +265,6 @@
 			if ('dateMode'    in changed) this._dateMode    = changed.dateMode || 'day';
 			if ('format'      in changed) this._format      = changed.format || '';
 			if ('weekRule'    in changed) this._weekRule    = changed.weekRule || 'ISO';
-			if ('darktheme'   in changed) this._darktheme   = !!changed.darktheme;
 			if ('enablerange' in changed) this._enablerange = !!changed.enablerange;
 			if ('minDateVal'  in changed) this._minDateVal  = changed.minDateVal ? new Date(changed.minDateVal) : null;
 			if ('maxDateVal'  in changed) this._maxDateVal  = changed.maxDateVal ? new Date(changed.maxDateVal) : null;
@@ -280,7 +274,6 @@
 		set dateMode    (v) { this._dateMode    = v || 'day';  this._render(); }
 		set format      (v) { this._format      = v || '';     this._render(); }
 		set weekRule    (v) { this._weekRule    = v || 'ISO';  this._render(); }
-		set darktheme   (v) { this._darktheme   = !!v;         this._render(); }
 		set enablerange (v) { this._enablerange = !!v;         this._render(); }
 		set minDateVal  (v) { this._minDateVal  = v ? new Date(v) : null; this._render(); }
 		set maxDateVal  (v) { this._maxDateVal  = v ? new Date(v) : null; this._render(); }
@@ -288,7 +281,6 @@
 		get dateMode    () { return this._dateMode; }
 		get format      () { return this._format; }
 		get weekRule    () { return this._weekRule; }
-		get darktheme   () { return this._darktheme; }
 		get enablerange () { return this._enablerange; }
 		get minDateVal  () { return this._minDateVal; }
 		get maxDateVal  () { return this._maxDateVal; }
@@ -330,7 +322,6 @@
 			this.$.dateMode.value = this._dateMode;
 			this._fillFormats(this._format);
 			this.$.weekRule.value = this._weekRule;
-			this.$.theme.checked  = this._darktheme;
 			this.$.range.checked  = this._enablerange;
 			this.$.minDate.value  = toInputValue(this._minDateVal);
 			this.$.maxDate.value  = toInputValue(this._maxDateVal);
