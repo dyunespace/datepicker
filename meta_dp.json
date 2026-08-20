@@ -12,14 +12,14 @@
 		{
 			"kind": "main",
 			"tag": "com-sap-sac-datepicker-glp-main",
-			"url": "https://dyunespace.github.io/datepicker/script_dp.js?v=20260819a",
+			"url": "https://dyunespace.github.io/datepicker/script_dp.js?v=20260820b",
 			"integrity": "",
 			"ignoreIntegrity": true
 		},
 		{
 			"kind": "styling",
 			"tag": "com-sap-sac-datepicker-glp-styling",
-			"url": "https://dyunespace.github.io/datepicker/styling_dp.js?v=20260819a",
+			"url": "https://dyunespace.github.io/datepicker/styling_dp.js?v=20260820b",
 			"integrity": "",
 			"ignoreIntegrity": true
 		}
