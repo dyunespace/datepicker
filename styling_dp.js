@@ -22,7 +22,7 @@
 	'use strict';
 
 	var TAG   = 'com-sap-sac-datepicker-glp-styling';
-	var BUILD = '2026-08-20 20:17 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
+	var BUILD = '2026-08-20 20:24 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
 	console.log('%c[datepicker] styling build ' + BUILD + ' (UI5)', 'color:#346187;font-weight:bold');
 
 	// 모드별 형식 선택지. key 가 실제 displayFormat 패턴.
@@ -204,17 +204,19 @@
 
 			// ── Color ──
 			// 트리 위젯과 동일하게 네이티브 색상 입력을 HTML 로 감싼다.
-			var isDefaultColor = !P.fontColor;
+			// 비활성화하지 않는다. 색을 고르면 'Use default' 가 자동으로 풀리므로
+			// 스와치를 누르는 것만으로 바로 적용된다.
 			C.fontColor = new HTML({
-				content: "<div><input type='color' value='" + (P.fontColor || DEFAULT_COLOR) +
-					"' style='width:100%;height:2.25rem;padding:2px;border:1px solid #bfbfbf;cursor:pointer;'" +
-					(isDefaultColor ? ' disabled' : '') + '></div>',
+				content: "<div style='line-height:0'><input type='color' value='" +
+					(P.fontColor || DEFAULT_COLOR) +
+					"' style='width:100%;height:2.25rem;padding:2px;border:1px solid #bfbfbf;cursor:pointer;'></div>",
 				afterRendering: function () {
-					var dom = this.getDomRef();
-					var input = dom && dom.querySelector('input');
-					if (!input) return;
+					var dom   = this.getDomRef();
+					var input = dom && (dom.tagName === 'INPUT' ? dom : dom.querySelector('input'));
+					if (!input || input._dpBound) return;
+					input._dpBound = true;      // 재렌더링 시 중복 부착 방지
 					input.addEventListener('change', function (ev) {
-						C.colorDefault.setSelected(false);
+						if (C.colorDefault) C.colorDefault.setSelected(false);
 						host.updateProp('fontColor', ev.target.value);
 					});
 				}
@@ -222,13 +224,15 @@
 
 			C.colorDefault = new CheckBox({
 				text: 'Use default',
-				selected: isDefaultColor,
+				selected: !P.fontColor,
 				select: function (e) {
-					var on  = e.getParameter('selected');
-					var dom = C.fontColor.getDomRef();
-					var input = dom && dom.querySelector('input');
-					if (input) input.disabled = on;
-					host.updateProp('fontColor', on ? '' : (input ? input.value : DEFAULT_COLOR));
+					var on = e.getParameter('selected');
+					if (on) {
+						host.updateProp('fontColor', '');
+					} else {
+						var input = host._colorInput();
+						host.updateProp('fontColor', input ? input.value : DEFAULT_COLOR);
+					}
 				}
 			});
 
@@ -278,11 +282,14 @@
 					field('Color:', C.fontColor,   8)
 				]
 			});
+			// 'Use default' 는 Color 스와치 바로 아래에 오도록 열을 맞춘다.
+			// 떨어뜨려 놓으면 둘이 한 쌍이라는 게 보이지 않는다.
 			var styleRow = new HBox({
 				width: '100%',
 				items: [
-					field('Font Style:',   C.fontStyle,     12),
-					field('Color Option:', C.colorDefault,  18)
+					field('Font Style:', C.fontStyle, 12),
+					new VBox({ items: [], layoutData: new FlexItemData({ growFactor: 10, baseSize: '0%' }) }),
+					field(' ', C.colorDefault, 8)
 				]
 			});
 			// HBox 자식 사이 간격
@@ -290,7 +297,7 @@
 				if (i < 2) it.addStyleClass('sapUiTinyMarginEnd');
 			});
 			styleRow.getItems().forEach(function (it, i) {
-				if (i < 1) it.addStyleClass('sapUiTinyMarginEnd');
+				if (i < 2) it.addStyleClass('sapUiTinyMarginEnd');
 			});
 
 			var root = new VBox({
@@ -445,6 +452,14 @@
 			return isNaN(d.getTime()) ? null : d;
 		}
 
+		// 색상 입력 DOM 을 안전하게 찾는다.
+		_colorInput () {
+			if (!this._C || !this._C.fontColor) return null;
+			var dom = this._C.fontColor.getDomRef();
+			if (!dom) return null;
+			return dom.tagName === 'INPUT' ? dom : dom.querySelector('input');
+		}
+
 		_hintOf (key) {
 			for (var i = 0; i < WEEK_RULES.length; i++) {
 				if (WEEK_RULES[i].k === key) return 'Example: ' + WEEK_RULES[i].hint;
@@ -485,14 +500,9 @@
 			C.fontSize.setValue(P.fontSize ? String(P.fontSize) : '');
 			C.range.setSelected(!!P.enablerange);
 
-			var useDefault = !P.fontColor;
-			C.colorDefault.setSelected(useDefault);
-			var dom = C.fontColor.getDomRef();
-			var input = dom && dom.querySelector('input');
-			if (input) {
-				input.disabled = useDefault;
-				if (P.fontColor) input.value = P.fontColor;
-			}
+			C.colorDefault.setSelected(!P.fontColor);
+			var input = this._colorInput();
+			if (input) input.value = P.fontColor || DEFAULT_COLOR;
 
 			C.minDate.setValue(toInputValue(this._toDate(P.minDateVal)));
 			C.maxDate.setValue(toInputValue(this._toDate(P.maxDateVal)));
