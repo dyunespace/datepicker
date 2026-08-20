@@ -56,10 +56,6 @@
 			"description": "date format (varies by dateMode)",
 			"default": ""
 		},
-		"darktheme": {
-			"type": "boolean",
-			"default": false
-		},
 		"enablerange": {
 			"type": "boolean",
 			"default": false
