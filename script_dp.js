@@ -20,8 +20,8 @@
 	'use strict';
 
 	var TAG   = 'com-sap-sac-datepicker-glp-main';
-	var BUILD = '20260820b';   // 캐시 확인용. meta_dp.json 의 ?v= 값과 같아야 한다.
-	console.log('[datepicker] main build ' + BUILD);
+	var BUILD = '2026-08-20 13:29 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
+	console.log('%c[datepicker] main build ' + BUILD, 'color:#346187;font-weight:bold');
 
 	// ────────────────────────────────────────────────────────────
 	// <1> 상수
@@ -130,8 +130,19 @@
 
 			if (token !== host._buildToken) { try { dp.destroy(); } catch (e) {} return; }
 
-			host._destroyControl();          // 혹시 남아 있는 이전 컨트롤 정리
-			dp.placeAt(host._container);
+			// 남아 있을 수 있는 이전 컨트롤과 마운트를 먼저 걷어낸다.
+			host._destroyControl();
+
+			// UI5 전용 마운트를 매번 새로 만든다.
+			// placeAt 은 기본이 "맨 뒤에 추가"라 같은 노드에 반복하면 컨트롤이 쌓인다.
+			// setVisible 을 껐다 켤 때 아래로 복제되던 원인.
+			// 또한 placeAt 대상 노드는 UIArea 가 내용을 관리하므로
+			// <style> 태그와 섞이지 않도록 분리한다.
+			host._mount = document.createElement('div');
+			host._mount.style.cssText = 'width:100%;';
+			host._container.appendChild(host._mount);
+
+			dp.placeAt(host._mount);
 			host._dp = dp;
 
 			host._applyBaseStyle();
@@ -149,6 +160,7 @@
 			this._widgetUid = 'dp-' + Math.random().toString(36).slice(2, 9);
 			this._built      = false;
 			this._dp         = null;
+			this._mount      = null;
 			this._buildToken = 0;
 
 			this._dateMode    = 'day';
@@ -186,7 +198,9 @@
 				this._container.addEventListener('click',       forward, true);
 			}
 
-			if (this._built) return;
+			// 이미 살아 있는 컨트롤이 있으면 다시 만들지 않는다.
+			if (this._built && this._dp) return;
+			this._destroyControl();          // 반쯤 남은 상태를 정리하고 새로 시작
 			this._built = true;
 
 			if (window.sap && window.sap.ui && window.sap.ui.require) {
@@ -268,6 +282,18 @@
 			if (this._dp) {
 				try { this._dp.destroy(); } catch (e) { /* 이미 파기됨 */ }
 				this._dp = null;
+			}
+			// 마운트 노드도 반드시 함께 제거한다. 남겨두면 다음 빌드에서 누적된다.
+			if (this._mount) {
+				if (this._mount.parentNode) this._mount.parentNode.removeChild(this._mount);
+				this._mount = null;
+			}
+			// 파기 후에도 컨테이너에 UI5 잔해가 남아 있으면 정리한다.
+			if (this._container) {
+				var kids = Array.prototype.slice.call(this._container.children);
+				for (var i = 0; i < kids.length; i++) {
+					if (kids[i] !== this._styleEl) this._container.removeChild(kids[i]);
+				}
 			}
 		}
 
