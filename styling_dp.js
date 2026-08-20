@@ -12,7 +12,7 @@
 	'use strict';
 
 	var TAG   = 'com-sap-sac-datepicker-glp-styling';
-	var BUILD = '2026-08-20 13:55 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
+	var BUILD = '2026-08-20 15:39 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
 	console.log('%c[datepicker] styling build ' + BUILD, 'color:#346187;font-weight:bold');
 
 	// 모드별 형식 선택지. value 가 실제 displayFormat 패턴.
@@ -37,6 +37,24 @@
 			{ v: 'MMM yyyy', t: 'Mon YYYY' }
 		]
 	};
+
+	// SAC 기본 패널의 폰트 목록을 그대로 따른다.
+	// key 는 CSS font-family 값. '' 는 SAC 테마 상속(Default).
+	var FONTS = [
+		{ v: '',                                      t: 'Default' },
+		{ v: "'72', '72full', Arial, sans-serif",      t: '72-Web' },
+		{ v: 'Arial, sans-serif',                      t: 'Arial' },
+		{ v: "'Courier New', Courier, monospace",      t: 'Courier' },
+		{ v: 'Georgia, serif',                         t: 'Georgia' },
+		{ v: 'Lato, sans-serif',                       t: 'Lato' },
+		{ v: "'SAP-icons'",                            t: 'SAP-icons' },
+		{ v: "'Times New Roman', Times, serif",        t: 'Times New Roman' },
+		{ v: "'Trebuchet MS', sans-serif",             t: 'Trebuchet MS' },
+		{ v: 'Verdana, sans-serif',                    t: 'Verdana' }
+	];
+
+	var FONT_SIZES  = [10, 12, 14, 16, 18, 20, 22, 24, 32, 48];
+	var FONT_STYLES = ['Regular', 'Italic', 'Bold', 'Bold Italic'];
 
 	var tmpl = document.createElement('template');
 	tmpl.innerHTML = `
@@ -130,6 +148,15 @@
 			justify-content: center;
 		}
 		${TAG} .checkbox input:focus ~ div.checkmark { outline: 1px dotted #333; }
+		${TAG} input[type="color"] {
+			width: 100%;
+			height: 26px;
+			padding: 2px;
+			border: 1px solid rgb(191, 191, 191);
+			background: #ffffff;
+			cursor: pointer;
+		}
+		${TAG} input[type="color"]:disabled { opacity: .45; cursor: default; }
 		${TAG} .hidden { display: none !important; }
 		${TAG} p.hint {
 			color: #666666;
@@ -167,6 +194,24 @@
 		<p>Miscellaneous</p>
 		<label class="checkbox"><input type="checkbox" id="range" /><div class="checkmark"></div>Enable date range selection</label>
 
+		<p>Font</p>
+		<div class="select">
+			<select id="fontFamily"></select>
+		</div>
+
+		<p>Font Size</p>
+		<input id="fontSize" list="dpFontSizes" inputmode="numeric" placeholder="Default" />
+		<datalist id="dpFontSizes"></datalist>
+
+		<p>Font Style</p>
+		<div class="select">
+			<select id="fontStyle"></select>
+		</div>
+
+		<p>Font Color</p>
+		<label class="checkbox"><input type="checkbox" id="fontColorDefault" /><div class="checkmark"></div>Use default</label>
+		<input type="color" id="fontColor" value="#000000" />
+
 		<p>Minimum Date Value</p>
 		<input type="date" id="minDate" />
 
@@ -198,6 +243,10 @@
 			this._format      = '';
 			this._weekRule    = 'ISO';
 			this._enablerange = false;
+			this._fontFamily  = '';
+			this._fontSize    = 0;
+			this._fontStyle   = 'Regular';
+			this._fontColor   = '';
 			this._minDateVal  = null;
 			this._maxDateVal  = null;
 
@@ -209,6 +258,12 @@
 				weekRuleLabel: this.querySelector('#weekRuleLabel'),
 				weekRuleHint:  this.querySelector('#weekRuleHint'),
 				range:         this.querySelector('#range'),
+				fontFamily:    this.querySelector('#fontFamily'),
+				fontSize:      this.querySelector('#fontSize'),
+				fontSizes:     this.querySelector('#dpFontSizes'),
+				fontStyle:     this.querySelector('#fontStyle'),
+				fontColor:     this.querySelector('#fontColor'),
+				fontColorDef:  this.querySelector('#fontColorDefault'),
 				minDate:       this.querySelector('#minDate'),
 				maxDate:       this.querySelector('#maxDate')
 			};
@@ -240,6 +295,40 @@
 				this._send('enablerange', this._enablerange)
 			}.bind(this));
 
+			this.$.fontFamily.addEventListener('change', function () {
+				this._fontFamily = this.$.fontFamily.value;
+				this._send('fontFamily', this._fontFamily);
+			}.bind(this));
+
+			// 목록에서 고르거나 직접 입력하거나 둘 다 허용한다.
+			this.$.fontSize.addEventListener('change', function () {
+				var raw = String(this.$.fontSize.value).replace(/[^0-9]/g, '');
+				var n   = raw === '' ? 0 : Math.min(96, Math.max(6, parseInt(raw, 10)));
+				this._fontSize = isNaN(n) ? 0 : n;
+				this.$.fontSize.value = this._fontSize ? String(this._fontSize) : '';
+				this._send('fontSize', this._fontSize);
+			}.bind(this));
+
+			this.$.fontStyle.addEventListener('change', function () {
+				this._fontStyle = this.$.fontStyle.value;
+				this._send('fontStyle', this._fontStyle);
+			}.bind(this));
+
+			this.$.fontColor.addEventListener('change', function () {
+				this._fontColor = this.$.fontColor.value;
+				this.$.fontColorDef.checked = false;
+				this.$.fontColor.disabled = false;
+				this._send('fontColor', this._fontColor);
+			}.bind(this));
+
+			// 체크하면 SAC 테마 색을 그대로 쓴다(빈 값).
+			this.$.fontColorDef.addEventListener('change', function () {
+				var useDefault = this.$.fontColorDef.checked;
+				this.$.fontColor.disabled = useDefault;
+				this._fontColor = useDefault ? '' : (this.$.fontColor.value || '#000000');
+				this._send('fontColor', this._fontColor);
+			}.bind(this));
+
 			this.$.minDate.addEventListener('change', function () {
 				this._minDateVal = fromInputValue(this.$.minDate.value);
 				this._send('minDateVal', this._minDateVal)
@@ -250,6 +339,7 @@
 				this._send('maxDateVal', this._maxDateVal)
 			}.bind(this));
 
+			this._fillStatic();
 			this._fillFormats(this._format);
 			this._syncVisibility();
 			this._updateHint();
@@ -268,6 +358,10 @@
 			if ('format'      in changed) this._format      = changed.format || '';
 			if ('weekRule'    in changed) this._weekRule    = changed.weekRule || 'ISO';
 			if ('enablerange' in changed) this._enablerange = !!changed.enablerange;
+			if ('fontFamily'  in changed) this._fontFamily  = changed.fontFamily || '';
+			if ('fontSize'    in changed) this._fontSize    = Number(changed.fontSize) || 0;
+			if ('fontStyle'   in changed) this._fontStyle   = changed.fontStyle || 'Regular';
+			if ('fontColor'   in changed) this._fontColor   = changed.fontColor || '';
 			if ('minDateVal'  in changed) this._minDateVal  = changed.minDateVal ? new Date(changed.minDateVal) : null;
 			if ('maxDateVal'  in changed) this._maxDateVal  = changed.maxDateVal ? new Date(changed.maxDateVal) : null;
 			this._render();
@@ -277,6 +371,10 @@
 		set format      (v) { this._format      = v || '';     this._render(); }
 		set weekRule    (v) { this._weekRule    = v || 'ISO';  this._render(); }
 		set enablerange (v) { this._enablerange = !!v;         this._render(); }
+		set fontFamily  (v) { this._fontFamily  = v || '';        this._render(); }
+		set fontSize    (v) { this._fontSize    = Number(v) || 0; this._render(); }
+		set fontStyle   (v) { this._fontStyle   = v || 'Regular'; this._render(); }
+		set fontColor   (v) { this._fontColor   = v || '';        this._render(); }
 		set minDateVal  (v) { this._minDateVal  = v ? new Date(v) : null; this._render(); }
 		set maxDateVal  (v) { this._maxDateVal  = v ? new Date(v) : null; this._render(); }
 
@@ -284,8 +382,25 @@
 		get format      () { return this._format; }
 		get weekRule    () { return this._weekRule; }
 		get enablerange () { return this._enablerange; }
+		get fontFamily  () { return this._fontFamily; }
+		get fontSize    () { return this._fontSize; }
+		get fontStyle   () { return this._fontStyle; }
+		get fontColor   () { return this._fontColor; }
 		get minDateVal  () { return this._minDateVal; }
 		get maxDateVal  () { return this._maxDateVal; }
+
+		// 폰트/사이즈/스타일 목록은 고정이라 한 번만 채운다.
+		_fillStatic () {
+			var add = function (parent, value, text) {
+				var o = document.createElement('option');
+				o.value = value;
+				if (text !== undefined) o.textContent = text;
+				parent.appendChild(o);
+			};
+			FONTS.forEach(function (f) { add(this.$.fontFamily, f.v, f.t); }.bind(this));
+			FONT_STYLES.forEach(function (v) { add(this.$.fontStyle, v, v); }.bind(this));
+			FONT_SIZES.forEach(function (n) { add(this.$.fontSizes, String(n)); }.bind(this));
+		}
 
 		_fillFormats (keep) {
 			var list = FORMATS[this._dateMode] || FORMATS.day;
@@ -325,6 +440,13 @@
 			this._fillFormats(this._format);
 			this.$.weekRule.value = this._weekRule;
 			this.$.range.checked  = this._enablerange;
+			this.$.fontFamily.value = this._fontFamily;
+			this.$.fontStyle.value  = this._fontStyle;
+			this.$.fontSize.value   = this._fontSize ? String(this._fontSize) : '';
+			var useDefault = !this._fontColor;
+			this.$.fontColorDef.checked = useDefault;
+			this.$.fontColor.disabled   = useDefault;
+			if (this._fontColor) this.$.fontColor.value = this._fontColor;
 			this.$.minDate.value  = toInputValue(this._minDateVal);
 			this.$.maxDate.value  = toInputValue(this._maxDateVal);
 			this._syncVisibility();
