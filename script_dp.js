@@ -19,7 +19,9 @@
 (function () {
 	'use strict';
 
-	var TAG = 'com-sap-sac-datepicker-glp-main';
+	var TAG   = 'com-sap-sac-datepicker-glp-main';
+	var BUILD = '20260820b';   // 캐시 확인용. meta_dp.json 의 ?v= 값과 같아야 한다.
+	console.log('[datepicker] main build ' + BUILD);
 
 	// ────────────────────────────────────────────────────────────
 	// <1> 상수
@@ -76,11 +78,23 @@
 	// ────────────────────────────────────────────────────────────
 
 	function buildUI5 (host) {
+		// 컨테이너가 아직 없으면(프로퍼티 갱신이 connectedCallback 보다 먼저 온 경우)
+		// 여기서 만들지 않는다. connectedCallback 이 곧 다시 호출한다.
+		if (!host._container) return;
+
+		// 요청마다 토큰을 발급한다. sap.ui.require 는 비동기라
+		// 스토리를 열고 닫는 사이에 콜백이 뒤늦게 도착할 수 있다.
+		// 그 사이 재생성/파기가 있었다면 이 콜백의 결과는 버린다.
+		var token = ++host._buildToken;
+
 		sap.ui.require([
 			'sap/m/DatePicker',
 			'sap/m/DateRangeSelection',
 			'sap/ui/core/format/DateFormat'
 		], function (DatePicker, DateRangeSelection, DateFormat) {
+
+			// 늦게 도착한 콜백이면 아무것도 하지 않는다.
+			if (token !== host._buildToken || !host._container || !host.isConnected) return;
 
 			// MODULES 배열 순서 = 콜백 인자 순서. 어긋나면 조용히 오동작한다.
 			host._DateFormat = DateFormat;
@@ -114,6 +128,9 @@
 			host._applyMinMax(dp);
 			host._applyValues(dp);
 
+			if (token !== host._buildToken) { try { dp.destroy(); } catch (e) {} return; }
+
+			host._destroyControl();          // 혹시 남아 있는 이전 컨트롤 정리
 			dp.placeAt(host._container);
 			host._dp = dp;
 
@@ -130,8 +147,9 @@
 		constructor () {
 			super();
 			this._widgetUid = 'dp-' + Math.random().toString(36).slice(2, 9);
-			this._built     = false;
-			this._dp        = null;
+			this._built      = false;
+			this._dp         = null;
+			this._buildToken = 0;
 
 			this._dateMode    = 'day';
 			this._weekRule    = 'ISO';
@@ -246,6 +264,7 @@
 		// ── 내부 헬퍼 ──────────────────────────────────────────
 
 		_destroyControl () {
+			this._buildToken++;
 			if (this._dp) {
 				try { this._dp.destroy(); } catch (e) { /* 이미 파기됨 */ }
 				this._dp = null;
