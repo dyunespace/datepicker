@@ -20,7 +20,7 @@
 	'use strict';
 
 	var TAG   = 'com-sap-sac-datepicker-glp-main';
-	var BUILD = '2026-08-20 20:17 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
+	var BUILD = '2026-08-20 20:24 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
 	console.log('%c[datepicker] main build ' + BUILD, 'color:#346187;font-weight:bold');
 
 	// ────────────────────────────────────────────────────────────
@@ -404,7 +404,10 @@
 			var css = u + ' { margin: 0; }\n' +
 			          u + ' .sapMInputBaseContentWrapper { border-color: transparent; }\n';
 			if (decl.length) {
-				css += u + ' .sapMInputBaseInner { ' + decl.join(' ') + ' }\n';
+				// 래퍼까지 포함해 선택자 우선순위를 올린다.
+				// UI5 테마가 .sapMInputBaseInner 에 색을 지정하는 경우가 있어
+				// 같은 우선순위로는 밀릴 수 있다.
+				css += u + ' .sapMInputBaseContentWrapper .sapMInputBaseInner { ' + decl.join(' ') + ' }\n';
 			}
 			this._styleEl.textContent = css;
 		}
