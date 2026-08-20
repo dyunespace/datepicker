@@ -20,7 +20,7 @@
 	'use strict';
 
 	var TAG   = 'com-sap-sac-datepicker-glp-main';
-	var BUILD = '2026-08-20 13:29 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
+	var BUILD = '2026-08-20 13:55 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
 	console.log('%c[datepicker] main build ' + BUILD, 'color:#346187;font-weight:bold');
 
 	// ────────────────────────────────────────────────────────────
@@ -71,6 +71,29 @@
 
 	function isValidDate (d) {
 		return d instanceof Date && !isNaN(d.getTime());
+	}
+
+	// 문자열에서 숫자 덩어리를 뽑는다.
+	// "2026.34" "2026-W34" "202634" 를 모두 같은 결과로 받아들인다.
+	function numGroups (s, want) {
+		var g = String(s).match(/\d+/g);
+		if (!g) return null;
+		if (g.length >= want) return g.slice(0, want).map(Number);
+		// 구분자 없이 붙어 있는 경우 고정 폭으로 자른다.
+		if (g.length === 1) {
+			var t = g[0];
+			if (want === 2 && t.length === 6) return [+t.slice(0, 4), +t.slice(4)];
+			if (want === 3 && t.length === 8) return [+t.slice(0, 4), +t.slice(4, 6), +t.slice(6)];
+		}
+		return null;
+	}
+
+	// 주 기준 연도 + 주차 → 그 주의 첫날.
+	function weekToDate (y, w, rule) {
+		var r  = WEEK_RULES[rule] || WEEK_RULES.ISO;
+		var w1 = weekStartOf(Date.UTC(y, 0, r.minimalDaysInFirstWeek), r.firstDayOfWeek);
+		var d  = new Date(w1 + (w - 1) * 6048e5);
+		return new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
 	}
 
 	// ────────────────────────────────────────────────────────────
@@ -451,6 +474,69 @@
 		getSecondFormattedVal () {
 			if (!this._enablerange) return '';
 			return this._format1(this.getSecondDateVal());
+		}
+
+		// getFormattedVal() 이 돌려준 문자열을 그대로 다시 넣을 수 있다.
+		// 현재 dateMode 를 기준으로 해석하며, 모드 자체를 바꾸지는 않는다.
+		setFormattedVal (s) {
+			this._setFormatted(s, false);
+		}
+
+		setSecondFormattedVal (s) {
+			if (!this._enablerange) return;
+			this._setFormatted(s, true);
+		}
+
+		_setFormatted (str, isSecond) {
+			var d = this._parseByMode(str);
+			if (d === undefined) return;              // 형식이 어긋나면 아무것도 하지 않는다
+
+			if (isSecond) this._secondDateVal = d;
+			else          this._dateVal       = d;
+
+			this._applyValues(this._dp);
+			this.dispatchEvent(new CustomEvent('propertiesChanged', {
+				detail: {
+					properties: {
+						dateVal:       this._dateVal,
+						secondDateVal: this._secondDateVal
+					}
+				}
+			}));
+		}
+
+		// 성공하면 Date(또는 비우기면 null), 실패하면 undefined 를 돌려준다.
+		_parseByMode (str) {
+			if (str === null || str === undefined || String(str).trim() === '') return null;
+
+			var g, d;
+			if (this._dateMode === 'month') {
+				g = numGroups(str, 2);
+				if (!g || g[1] < 1 || g[1] > 12) return this._reject(str);
+				return new Date(g[0], g[1] - 1, 1);
+			}
+
+			if (this._dateMode === 'week') {
+				g = numGroups(str, 2);
+				if (!g || g[1] < 1 || g[1] > 53) return this._reject(str);
+				d = weekToDate(g[0], g[1], this._weekRule);
+				// 52주뿐인 해에 53주를 넣는 경우를 걸러낸다.
+				var back = calcWeek(d, this._weekRule);
+				if (back.year !== g[0] || back.week !== g[1]) return this._reject(str);
+				return d;
+			}
+
+			g = numGroups(str, 3);
+			if (!g || g[1] < 1 || g[1] > 12 || g[2] < 1 || g[2] > 31) return this._reject(str);
+			d = new Date(g[0], g[1] - 1, g[2]);
+			// 2월 30일 같은 값이 다음 달로 넘어가는 것을 막는다.
+			if (d.getMonth() !== g[1] - 1 || d.getDate() !== g[2]) return this._reject(str);
+			return d;
+		}
+
+		_reject (str) {
+			console.warn('[datepicker] "' + str + '" 은(는) 현재 모드(' + this._dateMode + ')의 형식과 맞지 않습니다.');
+			return undefined;
 		}
 	}
 
