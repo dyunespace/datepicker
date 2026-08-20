@@ -12,14 +12,14 @@
 		{
 			"kind": "main",
 			"tag": "com-sap-sac-datepicker-glp-main",
-			"url": "https://dyunespace.github.io/datepicker/script_dp.js?v=20260820b",
+			"url": "https://dyunespace.github.io/datepicker/script_dp.js?v=20260820c",
 			"integrity": "",
 			"ignoreIntegrity": true
 		},
 		{
 			"kind": "styling",
 			"tag": "com-sap-sac-datepicker-glp-styling",
-			"url": "https://dyunespace.github.io/datepicker/styling_dp.js?v=20260820b",
+			"url": "https://dyunespace.github.io/datepicker/styling_dp.js?v=20260820c",
 			"integrity": "",
 			"ignoreIntegrity": true
 		}
@@ -114,6 +114,26 @@
 			"returnType": "string",
 			"description": "get the formatted string for the end value. returns empty string if range selection is not enabled",
 			"parameters": []
+		},
+		"setFormattedVal": {
+			"description": "set the value from a formatted string, interpreted by the current dateMode. day: 2026.08.19 | week: 2026.34 | month: 2026.08. separators are ignored, so 20260819 / 2026-W34 also work. an empty string clears the value",
+			"parameters": [
+				{
+					"name": "s",
+					"type": "string",
+					"description": "The formatted value"
+				}
+			]
+		},
+		"setSecondFormattedVal": {
+			"description": "set the end value from a formatted string. has no effect if range selection is not enabled",
+			"parameters": [
+				{
+					"name": "s",
+					"type": "string",
+					"description": "The formatted value"
+				}
+			]
 		},
 		"isRangeEnabled": {
 			"description": "Returns whether range selection is enabled",
