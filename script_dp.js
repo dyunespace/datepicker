@@ -117,7 +117,7 @@
 			dp.placeAt(host._container);
 			host._dp = dp;
 
-			host._applyTheme();
+			host._applyBaseStyle();
 		});
 	}
 
@@ -136,7 +136,6 @@
 			this._dateMode    = 'day';
 			this._weekRule    = 'ISO';
 			this._format      = '';
-			this._darktheme   = false;
 			this._enablerange = false;
 			this._dateVal       = null;
 			this._secondDateVal = null;
@@ -226,7 +225,6 @@
 			if ('secondDateVal' in changed) { this._secondDateVal = this._toDate(changed.secondDateVal); }
 			if ('minDateVal'    in changed) { this._minDateVal    = this._toDate(changed.minDateVal); }
 			if ('maxDateVal'    in changed) { this._maxDateVal    = this._toDate(changed.maxDateVal); }
-			if ('darktheme'     in changed) { this._darktheme     = !!changed.darktheme; }
 
 			if (needRebuild) {
 				this._destroyControl();
@@ -242,7 +240,7 @@
 			}
 			this._applyMinMax(this._dp);
 			this._applyValues(this._dp);
-			this._applyTheme();
+			this._applyBaseStyle();
 		}
 
 		// ── 내부 헬퍼 ──────────────────────────────────────────
@@ -301,20 +299,14 @@
 			}
 		}
 
-		// 다크 테마는 파일을 늘리지 않도록 uid 로 스코프한 인라인 스타일로 처리.
-		_applyTheme () {
+		// UI5 입력 필드의 기본 테두리를 지워 SAC 배경에 자연스럽게 얹는다.
+		// uid 로 스코프해 같은 스토리의 다른 위젯에 영향을 주지 않는다.
+		_applyBaseStyle () {
 			if (!this._styleEl) return;
 			var u = '.' + this._widgetUid;
-			var css = u + ' { margin: 0; }\n' +
-			          u + ' .sapMInputBaseContentWrapper { border-color: transparent; }\n';
-			if (this._darktheme) {
-				css += u + ' .sapMInputBaseContentWrapper { background: transparent; }\n' +
-				       u + ' .sapMInputBaseContentWrapper:hover,\n' +
-				       u + ' .sapMInputBaseIcon:hover { background: rgba(42,73,100,.3) !important; }\n' +
-				       u + ' .sapMInputBaseInner,\n' +
-				       u + ' .sapMInputBaseIcon { color: #ffffff; }\n';
-			}
-			this._styleEl.textContent = css;
+			this._styleEl.textContent =
+				u + ' { margin: 0; }\n' +
+				u + ' .sapMInputBaseContentWrapper { border-color: transparent; }\n';
 		}
 
 		// <4-3> 값 변경 시 SAC 로 통보
