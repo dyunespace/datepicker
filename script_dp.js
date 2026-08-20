@@ -20,7 +20,7 @@
 	'use strict';
 
 	var TAG   = 'com-sap-sac-datepicker-glp-main';
-	var BUILD = '2026-08-20 13:55 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
+	var BUILD = '2026-08-20 15:39 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
 	console.log('%c[datepicker] main build ' + BUILD, 'color:#346187;font-weight:bold');
 
 	// ────────────────────────────────────────────────────────────
@@ -34,6 +34,14 @@
 		ISO:  { firstDayOfWeek: 1, minimalDaysInFirstWeek: 4, cwn: 'ISO_8601' },
 		JAN1: { firstDayOfWeek: 1, minimalDaysInFirstWeek: 1, cwn: null },
 		US:   { firstDayOfWeek: 0, minimalDaysInFirstWeek: 1, cwn: 'WesternTraditional' }
+	};
+
+	// Font Style → CSS 선언 매핑.
+	var FONT_STYLES = {
+		'Regular':     { weight: '',       style: ''       },
+		'Italic':      { weight: '',       style: 'italic' },
+		'Bold':        { weight: 'bold',   style: ''       },
+		'Bold Italic': { weight: 'bold',   style: 'italic' }
 	};
 
 	// 모드별 기본 표시 형식. day 의 '' 는 로케일 자동(Automatic).
@@ -190,6 +198,10 @@
 			this._weekRule    = 'ISO';
 			this._format      = '';
 			this._enablerange = false;
+			this._fontFamily  = '';
+			this._fontSize    = 0;
+			this._fontStyle   = 'Regular';
+			this._fontColor   = '';
 			this._dateVal       = null;
 			this._secondDateVal = null;
 			this._minDateVal    = null;
@@ -278,6 +290,10 @@
 			}
 			if ('dateVal'       in changed) { this._dateVal       = this._toDate(changed.dateVal); }
 			if ('secondDateVal' in changed) { this._secondDateVal = this._toDate(changed.secondDateVal); }
+			if ('fontFamily'    in changed) { this._fontFamily    = changed.fontFamily || ''; }
+			if ('fontSize'      in changed) { this._fontSize      = Number(changed.fontSize) || 0; }
+			if ('fontStyle'     in changed) { this._fontStyle     = changed.fontStyle || 'Regular'; }
+			if ('fontColor'     in changed) { this._fontColor     = changed.fontColor || ''; }
 			if ('minDateVal'    in changed) { this._minDateVal    = this._toDate(changed.minDateVal); }
 			if ('maxDateVal'    in changed) { this._maxDateVal    = this._toDate(changed.maxDateVal); }
 
@@ -372,9 +388,25 @@
 		_applyBaseStyle () {
 			if (!this._styleEl) return;
 			var u = '.' + this._widgetUid;
-			this._styleEl.textContent =
-				u + ' { margin: 0; }\n' +
-				u + ' .sapMInputBaseContentWrapper { border-color: transparent; }\n';
+
+			// 입력 필드 글자에만 적용한다.
+			// 팝업 캘린더는 SAC 화면 최상단에 따로 그려져 이 스코프 밖이며,
+			// 억지로 건드리면 다른 위젯의 팝업까지 영향을 받는다.
+			var decl = [];
+			if (this._fontFamily) decl.push('font-family: ' + this._fontFamily + ';');
+			if (this._fontSize)   decl.push('font-size: ' + this._fontSize + 'px;');
+			if (this._fontColor)  decl.push('color: ' + this._fontColor + ';');
+
+			var fs = FONT_STYLES[this._fontStyle] || FONT_STYLES.Regular;
+			if (fs.weight) decl.push('font-weight: ' + fs.weight + ';');
+			if (fs.style)  decl.push('font-style: ' + fs.style + ';');
+
+			var css = u + ' { margin: 0; }\n' +
+			          u + ' .sapMInputBaseContentWrapper { border-color: transparent; }\n';
+			if (decl.length) {
+				css += u + ' .sapMInputBaseInner { ' + decl.join(' ') + ' }\n';
+			}
+			this._styleEl.textContent = css;
 		}
 
 		// <4-3> 값 변경 시 SAC 로 통보
