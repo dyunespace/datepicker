@@ -20,7 +20,7 @@
 	'use strict';
 
 	var TAG   = 'com-sap-sac-datepicker-glp-main';
-	var BUILD = '2026-08-20 20:24 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
+	var BUILD = '2026-08-21 22:30 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
 	console.log('%c[datepicker] main build ' + BUILD, 'color:#346187;font-weight:bold');
 
 	// ────────────────────────────────────────────────────────────
@@ -30,19 +30,25 @@
 	// 주차 규칙 → DateFormat 옵션 매핑.
 	// cwn 은 팝업 캘린더(sap.ui.unified.Calendar)에 넘길 열거형.
 	// JAN1 은 대응하는 열거형이 없어 null → 캘린더 팝업은 로케일 기본값을 쓴다.
+	// 주차 규칙 → DateFormat 옵션 매핑.
+	// 키는 UI5 공식 열거형 sap/base/i18n/date/CalendarWeekNumbering 을 그대로 쓴다.
+	// 그 열거형에 없는 '월요일 시작 + 1월 1일 포함 주' 조합만 MondayJan1 로 따로 둔다.
+	// cwn 은 팝업 캘린더(sap.ui.unified.Calendar)에 넘길 값.
 	var WEEK_RULES = {
-		ISO:  { firstDayOfWeek: 1, minimalDaysInFirstWeek: 4, cwn: 'ISO_8601' },
-		JAN1: { firstDayOfWeek: 1, minimalDaysInFirstWeek: 1, cwn: null },
-		US:   { firstDayOfWeek: 0, minimalDaysInFirstWeek: 1, cwn: 'WesternTraditional' }
+		ISO_8601:           { firstDayOfWeek: 1, minimalDaysInFirstWeek: 4, cwn: 'ISO_8601' },
+		WesternTraditional: { firstDayOfWeek: 0, minimalDaysInFirstWeek: 1, cwn: 'WesternTraditional' },
+		MiddleEastern:      { firstDayOfWeek: 6, minimalDaysInFirstWeek: 1, cwn: 'MiddleEastern' },
+		MondayJan1:         { firstDayOfWeek: 1, minimalDaysInFirstWeek: 1, cwn: null }
 	};
 
-	// Font Style → CSS 선언 매핑.
-	var FONT_STYLES = {
-		'Regular':     { weight: '',       style: ''       },
-		'Italic':      { weight: '',       style: 'italic' },
-		'Bold':        { weight: 'bold',   style: ''       },
-		'Bold Italic': { weight: 'bold',   style: 'italic' }
-	};
+	// 이전 버전에서 쓰던 짧은 키를 공식 키로 옮겨준다.
+	// 스토리에 저장돼 있던 값이 그대로 들어와도 깨지지 않게 한다.
+	var WEEK_RULE_ALIAS = { ISO: 'ISO_8601', US: 'WesternTraditional', JAN1: 'MondayJan1' };
+
+	function normRule (v) {
+		var k = WEEK_RULE_ALIAS[v] || v;
+		return WEEK_RULES[k] ? k : 'ISO_8601';
+	}
 
 	// 모드별 기본 표시 형식. day 의 '' 는 로케일 자동(Automatic).
 	var DEFAULT_FORMAT = { day: '', week: 'YYYY.ww', month: 'yyyy.MM' };
@@ -60,7 +66,7 @@
 	// 주 기준 연도(week-year)와 주차를 함께 반환.
 	// 2027-01-01(금) 은 ISO 기준 { year: 2026, week: 53 } 이 된다.
 	function calcWeek (d, rule) {
-		var r  = WEEK_RULES[rule] || WEEK_RULES.ISO;
+		var r  = WEEK_RULES[normRule(rule)];
 		var t  = Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
 		var ws = weekStartOf(t, r.firstDayOfWeek);
 		// 앵커 = 주 시작 + (7 - minimalDays)일. ISO 라면 목요일.
@@ -71,7 +77,7 @@
 
 	// 해당 날짜가 속한 주의 첫날(로컬 Date).
 	function weekStartDate (d, rule) {
-		var r  = WEEK_RULES[rule] || WEEK_RULES.ISO;
+		var r  = WEEK_RULES[normRule(rule)];
 		var t  = Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
 		var ws = new Date(weekStartOf(t, r.firstDayOfWeek));
 		return new Date(ws.getUTCFullYear(), ws.getUTCMonth(), ws.getUTCDate());
@@ -98,7 +104,7 @@
 
 	// 주 기준 연도 + 주차 → 그 주의 첫날.
 	function weekToDate (y, w, rule) {
-		var r  = WEEK_RULES[rule] || WEEK_RULES.ISO;
+		var r  = WEEK_RULES[normRule(rule)];
 		var w1 = weekStartOf(Date.UTC(y, 0, r.minimalDaysInFirstWeek), r.firstDayOfWeek);
 		var d  = new Date(w1 + (w - 1) * 6048e5);
 		return new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
@@ -148,7 +154,7 @@
 			// getFormattedVal() 이 돌려주는 값은 <2>의 자체 계산이라 영향이 없다.
 			if (typeof dp._getFormatInstance === 'function') {
 				dp._getFormatInstance = function (oArgs) {
-					var r = WEEK_RULES[host._weekRule] || WEEK_RULES.ISO;
+					var r = WEEK_RULES[normRule(host._weekRule)];
 					oArgs.firstDayOfWeek           = r.firstDayOfWeek;
 					oArgs.minimalDaysInFirstWeek   = r.minimalDaysInFirstWeek;
 					return DateFormat.getInstance(oArgs);
@@ -195,7 +201,7 @@
 			this._buildToken = 0;
 
 			this._dateMode    = 'day';
-			this._weekRule    = 'ISO';
+			this._weekRule    = 'ISO_8601';
 			this._format      = '';
 			this._enablerange = false;
 			this._fontFamily  = '';
@@ -285,7 +291,7 @@
 				needFormat = true;
 			}
 			if ('weekRule' in changed) {
-				this._weekRule = changed.weekRule || 'ISO';
+				this._weekRule = normRule(changed.weekRule);
 				needFormat = true;
 			}
 			if ('dateVal'       in changed) { this._dateVal       = this._toDate(changed.dateVal); }
@@ -342,18 +348,31 @@
 			return isValidDate(d) ? d : null;
 		}
 
-		// 표시 형식 결정. 사용자가 고른 format 이 우선, 없으면 모드 기본값.
+		// 표시 형식 결정. 고른 format 이 현재 모드에 맞으면 그대로, 아니면 모드 기본값.
+		// 스크립트로 setDateMode() 만 호출하면 format 은 이전 모드 패턴인 채로 남는다.
+		// 그 상태로 두면 예컨대 month 모드인데 yyyy.MM.dd 라서
+		// 12개월 버튼 대신 일 캘린더가 뜨게 된다.
 		_resolveDisplayFormat () {
-			if (this._format) return this._format;
+			if (this._format && this._formatFitsMode(this._format)) return this._format;
 			return DEFAULT_FORMAT[this._dateMode] !== undefined
 				? DEFAULT_FORMAT[this._dateMode]
 				: '';
 		}
 
+		// 패턴이 현재 모드에 쓸 수 있는 것인지 심볼로 판단한다.
+		// 목록을 하드코딩하지 않아 사용자 지정 패턴에도 통한다.
+		_formatFitsMode (pat) {
+			var p = String(pat).replace(/'[^']*'/g, '');   // 따옴표 리터럴 제외
+			var hasDay = /d/.test(p), hasWeek = /w/.test(p), hasMonth = /M/.test(p);
+			if (this._dateMode === 'week')  return hasWeek;
+			if (this._dateMode === 'month') return hasMonth && !hasDay && !hasWeek;
+			return hasDay;
+		}
+
 		// 팝업 캘린더의 주차 표기 기준을 입력창과 맞춘다.
 		_applyWeekNumbering (dp) {
 			if (!dp || typeof dp.setCalendarWeekNumbering !== 'function') return;
-			var r = WEEK_RULES[this._weekRule] || WEEK_RULES.ISO;
+			var r = WEEK_RULES[normRule(this._weekRule)];
 			try { dp.setCalendarWeekNumbering(r.cwn || 'Default'); } catch (e) { /* 미지원 버전 */ }
 		}
 
@@ -389,7 +408,26 @@
 			if (!this._styleEl) return;
 			var u = '.' + this._widgetUid;
 
-			// 입력 필드 글자에만 적용한다.
+			// UI5 입력 필드가 그리는 선을 걷어낸다. SAC 위젯 테두리만 남긴다.
+			//  - 본체 테두리는 물론 hover / active 상태까지 함께 지운다.
+			//    테마의 hover 규칙이 선택자 4개짜리라 우리 것보다 우선순위가 높아
+			//    !important 없이는 되살아난다.
+			//  - 포커스 표시는 테두리가 아니라 ::before 가상 요소로 덧그려진다.
+			//    입력창에는 깜빡이는 커서가 있어 없어도 위치를 알 수 있으므로 숨긴다.
+			//    다만 캘린더 아이콘은 커서가 없어서, 아이콘에 포커스가 갔을 때만 되살린다.
+			//    :has() 를 모르는 브라우저에서는 이 줄이 무시되어 '항상 숨김'이 된다.
+			var css =
+				u + ' { margin: 0; }\n' +
+				u + ' .sapMInputBaseContentWrapper,\n' +
+				u + ' .sapMInputBaseContentWrapper:hover,\n' +
+				u + ' .sapMInputBaseContentWrapper:active {\n' +
+				'\tborder-color: transparent !important;\n' +
+				'\tbox-shadow: none !important;\n' +
+				'}\n' +
+				u + ' .sapMInputBaseContentWrapper::before { display: none !important; }\n' +
+				u + ' .sapMInputBaseContentWrapper:has(.sapMInputBaseIcon:focus)::before { display: block !important; }\n';
+
+			// 글꼴은 입력 필드 글자에만 적용한다.
 			// 팝업 캘린더는 SAC 화면 최상단에 따로 그려져 이 스코프 밖이며,
 			// 억지로 건드리면 다른 위젯의 팝업까지 영향을 받는다.
 			var decl = [];
@@ -401,12 +439,8 @@
 			if (fs.weight) decl.push('font-weight: ' + fs.weight + ';');
 			if (fs.style)  decl.push('font-style: ' + fs.style + ';');
 
-			var css = u + ' { margin: 0; }\n' +
-			          u + ' .sapMInputBaseContentWrapper { border-color: transparent; }\n';
 			if (decl.length) {
 				// 래퍼까지 포함해 선택자 우선순위를 올린다.
-				// UI5 테마가 .sapMInputBaseInner 에 색을 지정하는 경우가 있어
-				// 같은 우선순위로는 밀릴 수 있다.
 				css += u + ' .sapMInputBaseContentWrapper .sapMInputBaseInner { ' + decl.join(' ') + ' }\n';
 			}
 			this._styleEl.textContent = css;
