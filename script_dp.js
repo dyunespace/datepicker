@@ -20,12 +20,20 @@
 	'use strict';
 
 	var TAG   = 'com-sap-sac-datepicker-glp-main';
-	var BUILD = '2026-08-21 22:30 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
+	var BUILD = '2026-08-21 22:55 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
 	console.log('%c[datepicker] main build ' + BUILD, 'color:#346187;font-weight:bold');
 
 	// ────────────────────────────────────────────────────────────
 	// <1> 상수
 	// ────────────────────────────────────────────────────────────
+
+	// Font Style → CSS 선언 매핑.
+	var FONT_STYLES = {
+		'Regular':     { weight: '',     style: ''       },
+		'Italic':      { weight: '',     style: 'italic' },
+		'Bold':        { weight: 'bold', style: ''       },
+		'Bold Italic': { weight: 'bold', style: 'italic' }
+	};
 
 	// 주차 규칙 → DateFormat 옵션 매핑.
 	// cwn 은 팝업 캘린더(sap.ui.unified.Calendar)에 넘길 열거형.
