@@ -12,14 +12,14 @@
 		{
 			"kind": "main",
 			"tag": "com-sap-sac-datepicker-glp-main",
-			"url": "https://dyunespace.github.io/datepicker/script_dp.js?v=20260820d",
+			"url": "https://dyunespace.github.io/datepicker/script_dp.js?v=20260821a",
 			"integrity": "",
 			"ignoreIntegrity": true
 		},
 		{
 			"kind": "styling",
 			"tag": "com-sap-sac-datepicker-glp-styling",
-			"url": "https://dyunespace.github.io/datepicker/styling_dp.js?v=20260820d",
+			"url": "https://dyunespace.github.io/datepicker/styling_dp.js?v=20260821a",
 			"integrity": "",
 			"ignoreIntegrity": true
 		}
@@ -48,8 +48,8 @@
 		},
 		"weekRule": {
 			"type": "string",
-			"default": "ISO",
-			"description": "week numbering rule. ISO = Monday start, week containing first Thursday is week 1 | JAN1 = Monday start, week containing Jan 1 is week 1 | US = Sunday start, week containing Jan 1 is week 1"
+			"default": "ISO_8601",
+			"description": "week numbering rule, using the sap/base/i18n/date/CalendarWeekNumbering enum. ISO_8601 (Mon start, week with 1st Thursday) | WesternTraditional (Sun start, week with Jan 1) | MiddleEastern (Sat start) | MondayJan1 (Mon start, week with Jan 1 - not part of the UI5 enum)"
 		},
 		"format": {
 			"type": "string",
@@ -154,6 +154,40 @@
 					"description": "The formatted value"
 				}
 			]
+		},
+		"getDateMode": {
+			"returnType": "string",
+			"description": "get the current date mode. day | week | month",
+			"parameters": [],
+			"body": "return this.dateMode;"
+		},
+		"setDateMode": {
+			"description": "switch the date mode. if the current format does not fit the new mode, the mode default is used instead",
+			"parameters": [
+				{
+					"name": "mode",
+					"type": "string",
+					"description": "day | week | month"
+				}
+			],
+			"body": "if (mode === 'day' || mode === 'week' || mode === 'month') { this.dateMode = mode; }"
+		},
+		"getWeekRule": {
+			"returnType": "string",
+			"description": "get the week numbering rule. ISO_8601 | WesternTraditional | MiddleEastern | MondayJan1",
+			"parameters": [],
+			"body": "return this.weekRule;"
+		},
+		"setWeekRule": {
+			"description": "set the week numbering rule",
+			"parameters": [
+				{
+					"name": "rule",
+					"type": "string",
+					"description": "ISO_8601 | WesternTraditional | MiddleEastern | MondayJan1"
+				}
+			],
+			"body": "if (rule === 'ISO_8601' || rule === 'WesternTraditional' || rule === 'MiddleEastern' || rule === 'MondayJan1') { this.weekRule = rule; }"
 		},
 		"isRangeEnabled": {
 			"description": "Returns whether range selection is enabled",
