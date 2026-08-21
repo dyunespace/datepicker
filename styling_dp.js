@@ -22,7 +22,7 @@
 	'use strict';
 
 	var TAG   = 'com-sap-sac-datepicker-glp-styling';
-	var BUILD = '2026-08-20 20:24 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
+	var BUILD = '2026-08-21 22:30 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
 	console.log('%c[datepicker] styling build ' + BUILD + ' (UI5)', 'color:#346187;font-weight:bold');
 
 	// 모드별 형식 선택지. key 가 실제 displayFormat 패턴.
@@ -65,11 +65,21 @@
 	var FONT_SIZES  = [10, 12, 14, 16, 18, 20, 22, 24, 32, 48];
 	var FONT_STYLES = ['Regular', 'Italic', 'Bold', 'Bold Italic'];
 
+	// 키는 UI5 공식 열거형 CalendarWeekNumbering 을 따른다.
+	// MondayJan1 만 그 열거형에 없는 조합이라 자체 키를 쓴다.
 	var WEEK_RULES = [
-		{ k: 'ISO',  t: 'ISO 8601 (Mon, 1st Thu)', hint: '2027-01-01 \u2192 2026.53' },
-		{ k: 'JAN1', t: 'Mon start, week of Jan 1', hint: '2027-01-01 \u2192 2027.01' },
-		{ k: 'US',   t: 'Sun start, week of Jan 1', hint: '2027-01-01 \u2192 2027.01' }
+		{ k: 'ISO_8601',           t: 'ISO 8601 (Mon, 1st Thu)',   hint: '2027-01-01 \u2192 2026.53' },
+		{ k: 'MondayJan1',         t: 'Monday, week of Jan 1',     hint: '2027-01-01 \u2192 2027.01' },
+		{ k: 'WesternTraditional', t: 'Western (Sun, week of Jan 1)', hint: '2027-01-01 \u2192 2027.01' },
+		{ k: 'MiddleEastern',      t: 'Middle Eastern (Sat)',      hint: '2027-01-01 \u2192 2027.01' }
 	];
+
+	var WEEK_RULE_ALIAS = { ISO: 'ISO_8601', US: 'WesternTraditional', JAN1: 'MondayJan1' };
+
+	function normRule (v) {
+		var k = WEEK_RULE_ALIAS[v] || v;
+		return WEEK_RULES.some(function (r) { return r.k === k; }) ? k : 'ISO_8601';
+	}
 
 	var DEFAULT_COLOR = '#333333';
 
@@ -163,7 +173,7 @@
 			// ── Week Numbering Rule (week 모드에서만) ──
 			C.weekRule = new Select({
 				width: '100%',
-				selectedKey: P.weekRule || 'ISO',
+				selectedKey: normRule(P.weekRule),
 				items: items(WEEK_RULES),
 				change: function (e) {
 					var k = e.getParameter('selectedItem').getKey();
@@ -171,7 +181,7 @@
 					C.weekHint.setText(host._hintOf(k));
 				}
 			});
-			C.weekHint = new Text({ text: host._hintOf(P.weekRule || 'ISO') });
+			C.weekHint = new Text({ text: host._hintOf(normRule(P.weekRule)) });
 			C.weekHint.addStyleClass('sapUiTinyMarginBottom');
 
 			// ── Font ──
@@ -344,7 +354,7 @@
 			this._props = {
 				dateMode:    'day',
 				format:      '',
-				weekRule:    'ISO',
+				weekRule:    'ISO_8601',
 				enablerange: false,
 				fontFamily:  '',
 				fontSize:    0,
@@ -413,7 +423,7 @@
 
 		set dateMode    (v) { this._prop('dateMode',    v || 'day'); }
 		set format      (v) { this._prop('format',      v || ''); }
-		set weekRule    (v) { this._prop('weekRule',    v || 'ISO'); }
+		set weekRule    (v) { this._prop('weekRule',    normRule(v)); }
 		set enablerange (v) { this._prop('enablerange', !!v); }
 		set fontFamily  (v) { this._prop('fontFamily',  v || ''); }
 		set fontSize    (v) { this._prop('fontSize',    Number(v) || 0); }
@@ -492,8 +502,8 @@
 			var found = list.some(function (o) { return o.k === P.format; });
 			C.format.setSelectedKey(found ? P.format : list[0].k);
 
-			C.weekRule.setSelectedKey(P.weekRule || 'ISO');
-			C.weekHint.setText(this._hintOf(P.weekRule || 'ISO'));
+			C.weekRule.setSelectedKey(normRule(P.weekRule));
+			C.weekHint.setText(this._hintOf(normRule(P.weekRule)));
 
 			C.fontFamily.setSelectedKey(P.fontFamily || '');
 			C.fontStyle.setSelectedKey(P.fontStyle || 'Regular');
