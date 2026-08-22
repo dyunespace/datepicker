@@ -22,7 +22,7 @@
 	'use strict';
 
 	var TAG   = 'com-sap-sac-datepicker-glp-main';
-	var BUILD = '2026-08-22 11:52 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
+	var BUILD = '2026-08-22 12:12 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
 	console.log('%c[datepicker] main build ' + BUILD, 'color:#346187;font-weight:bold');
 
 	// ────────────────────────────────────────────────────────────
@@ -163,7 +163,12 @@
 			var dp = new DatePicker({
 				width: '100%',
 				displayFormat: host._resolveDisplayFormat(),
-				change: function () { host._onChange(); }
+				change: function () { host._onChange(); },
+				// 팝업은 SAC 화면 최상단에 따로 그려져 컨테이너 밖에 있다.
+				// 열린 뒤에 우리 uid 클래스를 직접 붙여 CSS 가 닿게 한다.
+				// id 를 조합해 겨냥하는 방식은 내부 구조에 의존해 깨지기 쉽다.
+				// (ResponsivePopover 는 껍데기이고 실제 DOM 은 그 안의 Popover 다)
+				afterValueHelpOpen: function () { host._tagPopup(); }
 			});
 
 			dp.addStyleClass('datePicker').addStyleClass(host._widgetUid);
@@ -433,6 +438,35 @@
 			this._styleEl.textContent = css;
 		}
 
+		// 팝업 컨트롤을 찾아 uid 클래스를 붙인다.
+		// ResponsivePopover 안의 실제 Popover(또는 좁은 화면에서는 Dialog)까지 내려간다.
+		_tagPopup () {
+			if (!this._dp) return;
+			var rp = this._dp.getAggregation && this._dp.getAggregation('_popup');
+			if (!rp) return;
+
+			var targets = [rp];
+			if (typeof rp._getPopup === 'function') {
+				try {
+					var inner = rp._getPopup();
+					if (inner && inner.getContent) targets.push(inner);
+				} catch (e) { /* 내부 구조 변경 대비 */ }
+			}
+			if (rp._oControl) targets.push(rp._oControl);
+
+			var cls = this._widgetUid + '-pop';
+			for (var i = 0; i < targets.length; i++) {
+				var t = targets[i];
+				if (t && typeof t.addStyleClass === 'function' && !t.hasStyleClass(cls)) {
+					t.addStyleClass(cls);
+				}
+			}
+
+			// DOM 에도 직접 붙여 둔다. 컨트롤 계층에서 못 잡는 경우의 안전장치.
+			var dom = rp.getDomRef && rp.getDomRef();
+			if (dom && !dom.classList.contains(cls)) dom.classList.add(cls);
+		}
+
 		// 강조색.
 		// 테마에서 이 색은 한 뿌리(@sapUiHighlight 계열)에서 파생돼
 		// 아이콘 · 헤더 · 화살표 · 선택 배경에 함께 쓰인다.
@@ -454,8 +488,7 @@
 				'\tcolor: #ffffff !important;\n' +
 				'}\n';
 
-			if (!this._dp) return css;
-			var rp = '#' + this._dp.getId() + '-RP';
+			var rp = '.' + this._widgetUid + '-pop';
 
 			css +=
 				rp + ' .sapUiCalHead > button { color: ' + a + ' !important; }\n' +
