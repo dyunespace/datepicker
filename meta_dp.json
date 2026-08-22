@@ -12,14 +12,14 @@
 		{
 			"kind": "main",
 			"tag": "com-sap-sac-datepicker-glp-main",
-			"url": "https://dyunespace.github.io/datepicker/script_dp.js?v=20260821a",
+			"url": "https://dyunespace.github.io/datepicker/script_dp.js?v=20260822a",
 			"integrity": "",
 			"ignoreIntegrity": true
 		},
 		{
 			"kind": "styling",
 			"tag": "com-sap-sac-datepicker-glp-styling",
-			"url": "https://dyunespace.github.io/datepicker/styling_dp.js?v=20260821a",
+			"url": "https://dyunespace.github.io/datepicker/styling_dp.js?v=20260822a",
 			"integrity": "",
 			"ignoreIntegrity": true
 		}
@@ -37,10 +37,6 @@
 			"type": "Date",
 			"description": "default (start) date"
 		},
-		"secondDateVal": {
-			"type": "Date",
-			"description": "default end date (range mode)"
-		},
 		"dateMode": {
 			"type": "string",
 			"default": "day",
@@ -55,10 +51,6 @@
 			"type": "string",
 			"description": "date format (varies by dateMode)",
 			"default": ""
-		},
-		"enablerange": {
-			"type": "boolean",
-			"default": false
 		},
 		"fontFamily": {
 			"type": "string",
@@ -95,11 +87,11 @@
 		},
 		"getDateVal": {
 			"returnType": "Date",
-			"description": "get the date. (start date if range selection is enabled, returns undefined when no date is selected)",
+			"description": "get the selected date. week mode returns the first day of that week, month mode the first day of that month. returns undefined when no date is selected",
 			"parameters": []
 		},
 		"setDateVal": {
-			"description": "set the date. (start date if range selection is enabled)",
+			"description": "set the selected date",
 			"parameters": [
 				{
 					"name": "dv",
@@ -109,44 +101,13 @@
 			],
 			"body": "this.dateVal = dv;"
 		},
-		"getSecondDateVal": {
-			"returnType": "Date",
-			"description": "get the end date. (returns undefined if range selection is not enabled)",
-			"parameters": []
-		},
-		"setSecondDateVal": {
-			"description": "set the end date. (has no effect if range selection is not enabled)",
-			"parameters": [
-				{
-					"name": "dv",
-					"type": "Date",
-					"description": "The new date"
-				}
-			],
-			"body": "this.secondDateVal = dv;"
-		},
 		"getFormattedVal": {
 			"returnType": "string",
 			"description": "get the formatted string for the selected value. day: yyyy.MM.dd | week: YYYY.ww (YYYY = week-based year, may differ from calendar year) | month: yyyy.MM",
 			"parameters": []
 		},
-		"getSecondFormattedVal": {
-			"returnType": "string",
-			"description": "get the formatted string for the end value. returns empty string if range selection is not enabled",
-			"parameters": []
-		},
 		"setFormattedVal": {
 			"description": "set the value from a formatted string, interpreted by the current dateMode. day: 2026.08.19 | week: 2026.34 | month: 2026.08. separators are ignored, so 20260819 / 2026-W34 also work. an empty string clears the value",
-			"parameters": [
-				{
-					"name": "s",
-					"type": "string",
-					"description": "The formatted value"
-				}
-			]
-		},
-		"setSecondFormattedVal": {
-			"description": "set the end value from a formatted string. has no effect if range selection is not enabled",
 			"parameters": [
 				{
 					"name": "s",
@@ -188,12 +149,6 @@
 				}
 			],
 			"body": "if (rule === 'ISO_8601' || rule === 'WesternTraditional' || rule === 'MiddleEastern' || rule === 'MondayJan1') { this.weekRule = rule; }"
-		},
-		"isRangeEnabled": {
-			"description": "Returns whether range selection is enabled",
-			"parameters": [],
-			"returnType": "boolean",
-			"body": "return this.enablerange;"
 		},
 		"getMinimumDateVal": {
 			"returnType": "Date",
