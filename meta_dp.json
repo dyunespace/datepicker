@@ -12,14 +12,14 @@
 		{
 			"kind": "main",
 			"tag": "com-sap-sac-datepicker-glp-main",
-			"url": "https://dyunespace.github.io/datepicker/script_dp.js?v=20260822b",
+			"url": "https://dyunespace.github.io/datepicker/script_dp.js?v=20260822c",
 			"integrity": "",
 			"ignoreIntegrity": true
 		},
 		{
 			"kind": "styling",
 			"tag": "com-sap-sac-datepicker-glp-styling",
-			"url": "https://dyunespace.github.io/datepicker/styling_dp.js?v=20260822b",
+			"url": "https://dyunespace.github.io/datepicker/styling_dp.js?v=20260822c",
 			"integrity": "",
 			"ignoreIntegrity": true
 		}
@@ -154,6 +154,61 @@
 				}
 			],
 			"body": "if (rule === 'ISO_8601' || rule === 'WesternTraditional' || rule === 'MiddleEastern' || rule === 'MondayJan1') { this.weekRule = rule; }"
+		},
+		"convertDateToWeek": {
+			"returnType": "string",
+			"description": "convert a date to its week. returns a week string. uses the format property when it is a week pattern, otherwise YYYY.ww. returns an empty string for an invalid input",
+			"parameters": [
+				{
+					"name": "dv",
+					"type": "Date",
+					"description": "The date to convert"
+				}
+			]
+		},
+		"convertStrDateToWeek": {
+			"returnType": "string",
+			"description": "convert a date string to its week. returns a week string. uses the format property when it is a week pattern, otherwise YYYY.ww. separators are ignored, so 2025.12.01 / 2025-12-01 / 20251201 are all accepted. returns an empty string for an invalid input",
+			"parameters": [
+				{
+					"name": "s",
+					"type": "string",
+					"description": "The date string to convert"
+				}
+			]
+		},
+		"convertWeekToFirstDate": {
+			"returnType": "string",
+			"description": "get the first day of the given week, following the weekRule property. returns a date string. uses the format property when it is a date pattern, otherwise yyyy.MM.dd. separators are ignored, so 2025.12.01 / 2025-12-01 / 20251201 are all accepted. returns an empty string for an invalid input",
+			"parameters": [
+				{
+					"name": "s",
+					"type": "string",
+					"description": "The week string, e.g. 2026.34"
+				}
+			]
+		},
+		"convertWeekToEndDate": {
+			"returnType": "string",
+			"description": "get the last day of the given week, following the weekRule property. returns a date string. uses the format property when it is a date pattern, otherwise yyyy.MM.dd. separators are ignored, so 2025.12.01 / 2025-12-01 / 20251201 are all accepted. returns an empty string for an invalid input",
+			"parameters": [
+				{
+					"name": "s",
+					"type": "string",
+					"description": "The week string, e.g. 2026.34"
+				}
+			]
+		},
+		"convertMonthToEndDate": {
+			"returnType": "string",
+			"description": "get the last day of the given month. leap years are handled. returns a date string. uses the format property when it is a date pattern, otherwise yyyy.MM.dd. separators are ignored, so 2025.12.01 / 2025-12-01 / 20251201 are all accepted. returns an empty string for an invalid input",
+			"parameters": [
+				{
+					"name": "s",
+					"type": "string",
+					"description": "The month string, e.g. 2026.08"
+				}
+			]
 		},
 		"getMinimumDateVal": {
 			"returnType": "Date",
