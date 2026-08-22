@@ -22,7 +22,7 @@
 	'use strict';
 
 	var TAG   = 'com-sap-sac-datepicker-glp-main';
-	var BUILD = '2026-08-22 21:28 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
+	var BUILD = '2026-08-22 22:18 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
 	console.log('%c[datepicker] main build ' + BUILD, 'color:#346187;font-weight:bold');
 
 	// ────────────────────────────────────────────────────────────
@@ -621,6 +621,52 @@
 
 		getFormattedVal () {
 			return this._formatOne(this.getDateVal());
+		}
+
+		// ── 오늘 / 이동 ──
+		//
+		// SAC 스크립트에는 Date 객체를 만들 수단이 사실상 없다.
+		// Date.now() 와 Date.parse() 는 정수를 돌려주어 Date 파라미터에 넣을 수 없다.
+		// 그래서 오늘 날짜가 필요한 일은 위젯 안에서 처리한다.
+
+		_todayDate () {
+			var n = new Date();
+			return new Date(n.getFullYear(), n.getMonth(), n.getDate());
+		}
+
+		// 오늘로 설정. 현재 모드에 맞게 정렬된다.
+		setToday () {
+			this._dateVal = snapToMode(this._todayDate(), this._dateMode, this._weekRule);
+			this._applyValue(this._dp);
+			this._fire({ dateVal: this._dateVal });
+		}
+
+		// 오늘을 현재 모드 형식으로. 위젯 값은 바뀌지 않는다.
+		getToday () {
+			return this._formatOne(snapToMode(this._todayDate(), this._dateMode, this._weekRule));
+		}
+
+		// 오늘을 항상 날짜 형식으로. 모드와 무관하다.
+		// 변환 함수에 넘길 값을 얻는 용도.
+		getTodayDate () {
+			return this._fmtDay(this._todayDate());
+		}
+
+		// 현재 모드 단위로 n 칸 이동한다.
+		// 값이 없으면 오늘을 기준으로 삼는다. shift(0) 은 setToday() 와 같다.
+		shift (n) {
+			var step = parseInt(n, 10);
+			if (isNaN(step)) step = 0;
+
+			var base = isValidDate(this._dateVal) ? this._dateVal : this._todayDate();
+			var d;
+			if (this._dateMode === 'week')       d = new Date(base.getFullYear(), base.getMonth(), base.getDate() + step * 7);
+			else if (this._dateMode === 'month') d = new Date(base.getFullYear(), base.getMonth() + step, 1);
+			else                                 d = new Date(base.getFullYear(), base.getMonth(), base.getDate() + step);
+
+			this._dateVal = snapToMode(d, this._dateMode, this._weekRule);
+			this._applyValue(this._dp);
+			this._fire({ dateVal: this._dateVal });
 		}
 
 		// ── 변환 전용 (위젯 값에 영향 없음) ──
