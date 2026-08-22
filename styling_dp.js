@@ -22,31 +22,37 @@
 	'use strict';
 
 	var TAG   = 'com-sap-sac-datepicker-glp-styling';
-	var BUILD = '2026-08-22 11:52 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
+	var BUILD = '2026-08-22 21:28 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
 	console.log('%c[datepicker] styling build ' + BUILD + ' (UI5)', 'color:#346187;font-weight:bold');
 
 	// 모드별 형식 선택지. key 가 실제 displayFormat 패턴.
+	// 모드별 형식 선택지. k 가 실제 displayFormat 패턴.
+	// 구분자 없는 형태(yyyyMMdd, YYYYww, yyyyMM)는 BW 로 값을 넘길 때 쓰인다.
 	var FORMATS = {
 		day: [
-			{ k: '',           t: 'Automatic'  },
 			{ k: 'yyyy.MM.dd', t: 'YYYY.MM.DD' },
+			{ k: 'yyyyMMdd',   t: 'YYYYMMDD' },
 			{ k: 'yyyy-MM-dd', t: 'YYYY-MM-DD' },
 			{ k: 'MM/dd/yyyy', t: 'MM/DD/YYYY' },
-			{ k: 'dd.MM.yyyy', t: 'DD.MM.YYYY' }
+			{ k: 'dd.MM.yyyy', t: 'DD.MM.YYYY' },
+			{ k: '',           t: 'Automatic' }
 		],
 		week: [
-			{ k: 'YYYY.ww',    t: 'YYYY.WW'  },
-			{ k: 'YYYY-ww',    t: 'YYYY-WW'  },
-			{ k: 'YYYY/ww',    t: 'YYYY/WW'  },
+			{ k: 'YYYY.ww',    t: 'YYYY.WW' },
+			{ k: 'YYYYww',     t: 'YYYYWW' },
+			{ k: 'YYYY-ww',    t: 'YYYY-WW' },
 			{ k: "YYYY-'W'ww", t: 'YYYY-Wnn' }
 		],
 		month: [
-			{ k: 'yyyy.MM',  t: 'YYYY.MM'  },
-			{ k: 'yyyy-MM',  t: 'YYYY-MM'  },
-			{ k: 'MM/yyyy',  t: 'MM/YYYY'  },
-			{ k: 'MMM yyyy', t: 'Mon YYYY' }
+			{ k: 'yyyy.MM', t: 'YYYY.MM' },
+			{ k: 'yyyyMM',  t: 'YYYYMM' },
+			{ k: 'yyyy-MM', t: 'YYYY-MM' },
+			{ k: 'MM/yyyy', t: 'MM/YYYY' }
 		]
 	};
+
+	// 모드 → 형식 프로퍼티 이름
+	var FORMAT_PROP = { day: 'formatDay', week: 'formatWeek', month: 'formatMonth' };
 
 	// SAC 기본 패널의 폰트 목록. key 는 CSS font-family 값, '' 는 테마 상속.
 	var FONTS = [
@@ -146,27 +152,25 @@
 					var mode = e.getParameter('selectedItem').getKey();
 					host.updateProp('dateMode', mode);
 
-					// 이전 모드의 패턴이 남아 있으면 캘린더 종류가 엉뚱하게 잡힌다.
-					// 목록을 갈아끼우고 첫 항목으로 초기화한다.
-					var list = FORMATS[mode] || FORMATS.day;
-					C.format.destroyItems();
-					items(list).forEach(function (it) { C.format.addItem(it); });
-					C.format.setSelectedKey(list[0].k);
-					host.updateProp('format', list[0].k);
+					// 형식 목록을 그 모드의 것으로 갈아끼우고,
+					// 이전에 그 모드에서 골라둔 값을 되살린다.
+					// 모드를 오갈 때 형식이 초기화되지 않는다.
+					host._fillFormatItems(C, mode);
 
 					host._syncWeekVisibility(C);
 				}
 			});
 
 			// ── Date Format ──
-			var fmtList = FORMATS[P.dateMode || 'day'] || FORMATS.day;
-			var keep = fmtList.some(function (o) { return o.k === P.format; }) ? P.format : fmtList[0].k;
+			var mode0 = P.dateMode || 'day';
 			C.format = new Select({
 				width: '100%',
-				selectedKey: keep,
-				items: items(fmtList),
+				selectedKey: P[FORMAT_PROP[mode0]],
+				items: items(FORMATS[mode0] || FORMATS.day),
 				change: function (e) {
-					host.updateProp('format', e.getParameter('selectedItem').getKey());
+					// 현재 모드에 해당하는 프로퍼티에만 쓴다.
+					var prop = FORMAT_PROP[host._props.dateMode] || 'formatDay';
+					host.updateProp(prop, e.getParameter('selectedItem').getKey());
 				}
 			});
 
@@ -387,7 +391,9 @@
 			super();
 			this._props = {
 				dateMode:    'day',
-				format:      '',
+				formatDay:   'yyyy.MM.dd',
+				formatWeek:  'YYYY.ww',
+				formatMonth: 'yyyy.MM',
 				weekRule:    'ISO_8601',
 				fontFamily:  '',
 				fontSize:    0,
@@ -456,7 +462,9 @@
 		_prop (name, v) { this._props[name] = v; this._syncControls(); }
 
 		set dateMode    (v) { this._prop('dateMode',    v || 'day'); }
-		set format      (v) { this._prop('format',      v || ''); }
+		set formatDay   (v) { this._prop('formatDay',   v === undefined ? 'yyyy.MM.dd' : v); }
+		set formatWeek  (v) { this._prop('formatWeek',  v || 'YYYY.ww'); }
+		set formatMonth (v) { this._prop('formatMonth', v || 'yyyy.MM'); }
 		set weekRule    (v) { this._prop('weekRule',    normRule(v)); }
 		set fontFamily  (v) { this._prop('fontFamily',  v || ''); }
 		set fontSize    (v) { this._prop('fontSize',    Number(v) || 0); }
@@ -467,7 +475,9 @@
 		set maxDateVal  (v) { this._prop('maxDateVal',  v || null); }
 
 		get dateMode    () { return this._props.dateMode; }
-		get format      () { return this._props.format; }
+		get formatDay   () { return this._props.formatDay; }
+		get formatWeek  () { return this._props.formatWeek; }
+		get formatMonth () { return this._props.formatMonth; }
 		get weekRule    () { return this._props.weekRule; }
 		get fontFamily  () { return this._props.fontFamily; }
 		get fontSize    () { return this._props.fontSize; }
@@ -504,6 +514,16 @@
 			return dom.tagName === 'INPUT' ? dom : dom.querySelector('input');
 		}
 
+		// 형식 셀렉트를 지정 모드의 목록으로 채우고, 저장된 값을 선택한다.
+		_fillFormatItems (C, mode) {
+			if (!C || !C.format || !this._ItemCtor) return;
+			var Item = this._ItemCtor;
+			var list = FORMATS[mode] || FORMATS.day;
+			C.format.destroyItems();
+			list.forEach(function (o) { C.format.addItem(new Item({ key: o.k, text: o.t })); });
+			C.format.setSelectedKey(this._props[FORMAT_PROP[mode]]);
+		}
+
 		_accentInput () {
 			if (!this._C || !this._C.accentColor) return null;
 			var dom = this._C.accentColor.getDomRef();
@@ -532,16 +552,7 @@
 
 			C.dateMode.setSelectedKey(P.dateMode || 'day');
 
-			var list = FORMATS[P.dateMode || 'day'] || FORMATS.day;
-			var keys = C.format.getItems().map(function (i) { return i.getKey(); });
-			var same = keys.length === list.length && list.every(function (o, i) { return keys[i] === o.k; });
-			if (!same && this._ItemCtor) {
-				var Item = this._ItemCtor;
-				C.format.destroyItems();
-				list.forEach(function (o) { C.format.addItem(new Item({ key: o.k, text: o.t })); });
-			}
-			var found = list.some(function (o) { return o.k === P.format; });
-			C.format.setSelectedKey(found ? P.format : list[0].k);
+			this._fillFormatItems(C, P.dateMode || 'day');
 
 			C.weekRule.setSelectedKey(normRule(P.weekRule));
 			C.weekHint.setText(this._hintOf(normRule(P.weekRule)));
