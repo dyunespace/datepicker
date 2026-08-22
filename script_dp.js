@@ -22,7 +22,7 @@
 	'use strict';
 
 	var TAG   = 'com-sap-sac-datepicker-glp-main';
-	var BUILD = '2026-08-22 21:18 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
+	var BUILD = '2026-08-22 21:28 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
 	console.log('%c[datepicker] main build ' + BUILD, 'color:#346187;font-weight:bold');
 
 	// ────────────────────────────────────────────────────────────
@@ -274,7 +274,12 @@
 
 			this._dateMode   = 'day';
 			this._weekRule   = 'ISO_8601';
-			this._format     = '';
+			// 모드마다 형식을 따로 둔다.
+			// 하나로 두면 모드를 오갈 때 형식이 초기화되고,
+			// 변환 함수도 '이 패턴이 어느 종류인지' 추론해야 해서 애매해진다.
+			this._formatDay   = 'yyyy.MM.dd';
+			this._formatWeek  = 'YYYY.ww';
+			this._formatMonth = 'yyyy.MM';
 			this._fontFamily = '';
 			this._fontSize   = 0;
 			this._fontStyle  = 'Regular';
@@ -344,7 +349,9 @@
 			var needFormat = false;
 
 			if ('dateMode' in changed) { this._dateMode = normMode(changed.dateMode); needFormat = true; }
-			if ('format'   in changed) { this._format   = changed.format || '';       needFormat = true; }
+			if ('formatDay'   in changed) { this._formatDay   = changed.formatDay === undefined ? 'yyyy.MM.dd' : changed.formatDay; needFormat = true; }
+			if ('formatWeek'  in changed) { this._formatWeek  = changed.formatWeek  || 'YYYY.ww';  needFormat = true; }
+			if ('formatMonth' in changed) { this._formatMonth = changed.formatMonth || 'yyyy.MM';  needFormat = true; }
 			if ('weekRule' in changed) { this._weekRule = normRule(changed.weekRule); needFormat = true; }
 
 			if ('dateVal'    in changed) { this._dateVal    = this._toDate(changed.dateVal); }
@@ -396,19 +403,12 @@
 			return isValidDate(d) ? d : null;
 		}
 
-		// 표시 형식 결정. 고른 format 이 현재 모드에 맞으면 그대로, 아니면 모드 기본값.
-		// 스크립트로 setDateMode() 만 호출하면 format 은 이전 모드 패턴인 채로 남는다.
-		// 그 상태로 두면 예컨대 month 모드인데 yyyy.MM.dd 라서
-		// 12개월 버튼 대신 일 캘린더가 뜨게 된다.
+		// 표시 형식. 모드별 프로퍼티를 그대로 쓴다.
+		// day 의 빈 값은 Automatic(로케일 자동)을 뜻한다.
 		_resolveDisplayFormat () {
-			if (this._format && this._formatFitsMode(this._format)) return this._format;
-			return DEFAULT_FORMAT[this._dateMode] !== undefined
-				? DEFAULT_FORMAT[this._dateMode]
-				: '';
-		}
-
-		_formatFitsMode (pat) {
-			return patternFits(pat, this._dateMode);
+			if (this._dateMode === 'week')  return this._formatWeek  || 'YYYY.ww';
+			if (this._dateMode === 'month') return this._formatMonth || 'yyyy.MM';
+			return this._formatDay === undefined ? 'yyyy.MM.dd' : this._formatDay;
 		}
 
 		// 팝업 캘린더의 주차 표기 기준을 입력창과 맞춘다.
@@ -671,7 +671,7 @@
 
 		// 주차 문자열. 자체 계산이라 로케일과 무관하다.
 		_fmtWeek (d) {
-			var pat = patternFits(this._format, 'week') ? this._format : 'YYYY.ww';
+			var pat = this._formatWeek || 'YYYY.ww';
 			var w   = calcWeek(d, this._weekRule);
 			var yy  = String(w.year);
 			var ww  = (w.week < 10 ? '0' : '') + w.week;
@@ -682,7 +682,9 @@
 
 		// 날짜 문자열.
 		_fmtDay (d) {
-			var pat = patternFits(this._format, 'day') ? this._format : 'yyyy.MM.dd';
+			// Automatic(빈 값)은 로케일에 따라 달라져 변환 결과로 쓸 수 없다.
+			// 변환 함수는 결과가 고정돼야 하므로 구체적인 기본 패턴으로 떨어뜨린다.
+			var pat = this._formatDay || 'yyyy.MM.dd';
 			if (this._DateFormat) {
 				try { return this._DateFormat.getInstance({ pattern: pat }).format(d); }
 				catch (e) { /* 아래 수동 처리로 */ }
