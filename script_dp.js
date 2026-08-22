@@ -22,7 +22,7 @@
 	'use strict';
 
 	var TAG   = 'com-sap-sac-datepicker-glp-main';
-	var BUILD = '2026-08-22 10:27 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
+	var BUILD = '2026-08-22 11:52 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
 	console.log('%c[datepicker] main build ' + BUILD, 'color:#346187;font-weight:bold');
 
 	// ────────────────────────────────────────────────────────────
@@ -230,6 +230,7 @@
 			this._fontSize   = 0;
 			this._fontStyle  = 'Regular';
 			this._fontColor  = '';
+			this._accentColor = '';
 			this._dateVal    = null;
 			this._minDateVal = null;
 			this._maxDateVal = null;
@@ -305,6 +306,7 @@
 			if ('fontSize'   in changed) { this._fontSize   = Number(changed.fontSize) || 0; }
 			if ('fontStyle'  in changed) { this._fontStyle  = changed.fontStyle || 'Regular'; }
 			if ('fontColor'  in changed) { this._fontColor  = changed.fontColor || ''; }
+			if ('accentColor' in changed) { this._accentColor = changed.accentColor || ''; }
 
 			if (!this._dp) return;
 
@@ -426,7 +428,47 @@
 				// 래퍼까지 포함해 선택자 우선순위를 올린다.
 				css += u + ' .sapMInputBaseContentWrapper .sapMInputBaseInner { ' + decl.join(' ') + ' }\n';
 			}
+
+			css += this._accentCss(u);
 			this._styleEl.textContent = css;
+		}
+
+		// 강조색.
+		// 테마에서 이 색은 한 뿌리(@sapUiHighlight 계열)에서 파생돼
+		// 아이콘 · 헤더 · 화살표 · 선택 배경에 함께 쓰인다.
+		// 우리는 파라미터를 바꾸는 게 아니라 결과를 개별로 칠하므로
+		// 그 자리들을 직접 나열해 준다.
+		//
+		// 팝업 캘린더는 SAC 화면 최상단에 따로 그려져 컨테이너 밖에 있다.
+		// 다만 DatePicker 가 팝업을 '<컨트롤 id>-RP' 라는 고정 id 로 만들기 때문에
+		// (UI5 1.120.2 DatePicker._createPopup 확인) id 로 정확히 겨냥할 수 있다.
+		// 자동 생성된 id 를 그대로 읽어 쓰므로 중복 id 위험이 없다.
+		_accentCss (u) {
+			var a = this._accentColor;
+			if (!a) return '';
+
+			var css =
+				u + ' .sapMInputBaseIcon { color: ' + a + ' !important; }\n' +
+				u + '.sapMInputBaseIconPressed .sapMInputBaseIcon {\n' +
+				'\tbackground-color: ' + a + ' !important;\n' +
+				'\tcolor: #ffffff !important;\n' +
+				'}\n';
+
+			if (!this._dp) return css;
+			var rp = '#' + this._dp.getId() + '-RP';
+
+			css +=
+				rp + ' .sapUiCalHead > button { color: ' + a + ' !important; }\n' +
+				rp + ' .sapUiCalHead > button:hover {\n' +
+				'\tbackground-color: ' + a + ' !important;\n' +
+				'\tcolor: #ffffff !important;\n' +
+				'}\n' +
+				rp + ' .sapUiCalItemSel .sapUiCalItemText,\n' +
+				rp + ' .sapUiCalItemSel {\n' +
+				'\tbackground-color: ' + a + ' !important;\n' +
+				'\tcolor: #ffffff !important;\n' +
+				'}\n';
+			return css;
 		}
 
 		// <4-3> 사용자가 값을 바꿨을 때
