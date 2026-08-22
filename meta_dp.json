@@ -12,14 +12,14 @@
 		{
 			"kind": "main",
 			"tag": "com-sap-sac-datepicker-glp-main",
-			"url": "https://dyunespace.github.io/datepicker/script_dp.js?v=20260822a",
+			"url": "https://dyunespace.github.io/datepicker/script_dp.js?v=20260822b",
 			"integrity": "",
 			"ignoreIntegrity": true
 		},
 		{
 			"kind": "styling",
 			"tag": "com-sap-sac-datepicker-glp-styling",
-			"url": "https://dyunespace.github.io/datepicker/styling_dp.js?v=20260822a",
+			"url": "https://dyunespace.github.io/datepicker/styling_dp.js?v=20260822b",
 			"integrity": "",
 			"ignoreIntegrity": true
 		}
@@ -71,6 +71,11 @@
 			"type": "string",
 			"default": "",
 			"description": "text color as hex. empty = inherit from SAC theme (Default)"
+		},
+		"accentColor": {
+			"type": "string",
+			"default": "",
+			"description": "accent color as hex. applies to the calendar icon, the icon pressed background, the calendar popup header and arrows, and the selected day/month background. empty = inherit from SAC theme (Default)"
 		},
 		"minDateVal": {
 			"type": "Date",
