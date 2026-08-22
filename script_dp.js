@@ -22,7 +22,7 @@
 	'use strict';
 
 	var TAG   = 'com-sap-sac-datepicker-glp-main';
-	var BUILD = '2026-08-22 12:50 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
+	var BUILD = '2026-08-22 13:16 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
 	console.log('%c[datepicker] main build ' + BUILD, 'color:#346187;font-weight:bold');
 
 	// ────────────────────────────────────────────────────────────
@@ -492,14 +492,16 @@
 
 			var css =
 				u + ' .sapMInputBaseIcon { color: ' + a + ' !important; }\n' +
-				u + ' .sapMInputBaseIcon:hover {\n' +
-				'\tbackground-color: ' + withAlpha(a, 0.20) + ' !important;\n' +
+				// hover 는 테마 기본(회색)을 그대로 둔다. 여기까지 물들이면 과하다.
+				// 누르는 중에는 강조색이 살짝 옅어진 톤,
+				// 팝업이 열린 동안에는 강조색 원색. 테마 기본 동작과 같은 흐름이다.
+				u + ' .sapMInputBaseIcon:active {\n' +
+				'\tbackground-color: ' + withAlpha(a, 0.82) + ' !important;\n' +
+				'\tcolor: #ffffff !important;\n' +
 				'}\n' +
-				// 눌린 상태는 원색으로 꽉 채우면 아이콘이 묻히고 눈에 튄다.
-				// UI5 기본처럼 옅은 음영만 깔고 아이콘 자체는 강조색으로 남긴다.
 				u + '.sapMInputBaseIconPressed .sapMInputBaseIcon {\n' +
-				'\tbackground-color: ' + withAlpha(a, 0.38) + ' !important;\n' +
-				'\tcolor: ' + a + ' !important;\n' +
+				'\tbackground-color: ' + a + ' !important;\n' +
+				'\tcolor: #ffffff !important;\n' +
 				'}\n';
 
 			var rp = '.' + this._widgetUid + '-pop';
