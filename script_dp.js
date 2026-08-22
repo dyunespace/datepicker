@@ -22,7 +22,7 @@
 	'use strict';
 
 	var TAG   = 'com-sap-sac-datepicker-glp-main';
-	var BUILD = '2026-08-22 12:12 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
+	var BUILD = '2026-08-22 12:25 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
 	console.log('%c[datepicker] main build ' + BUILD, 'color:#346187;font-weight:bold');
 
 	// ────────────────────────────────────────────────────────────
@@ -102,6 +102,15 @@
 		var w1 = weekStartOf(Date.UTC(y, 0, r.minimalDaysInFirstWeek), r.firstDayOfWeek);
 		var d  = new Date(w1 + (w - 1) * 6048e5);
 		return new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+	}
+
+	// #rgb / #rrggbb 를 rgba() 로. 강조색을 옅게 깔 때 쓴다.
+	function withAlpha (hex, alpha) {
+		var h = String(hex).trim().replace('#', '');
+		if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
+		if (!/^[0-9a-fA-F]{6}$/.test(h)) return hex;   // 알 수 없는 형식이면 그대로
+		var n = parseInt(h, 16);
+		return 'rgba(' + ((n >> 16) & 255) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + alpha + ')';
 	}
 
 	function isValidDate (d) {
@@ -483,9 +492,14 @@
 
 			var css =
 				u + ' .sapMInputBaseIcon { color: ' + a + ' !important; }\n' +
+				u + ' .sapMInputBaseIcon:hover {\n' +
+				'\tbackground-color: ' + withAlpha(a, 0.12) + ' !important;\n' +
+				'}\n' +
+				// 눌린 상태는 원색으로 꽉 채우면 아이콘이 묻히고 눈에 튄다.
+				// UI5 기본처럼 옅은 음영만 깔고 아이콘 자체는 강조색으로 남긴다.
 				u + '.sapMInputBaseIconPressed .sapMInputBaseIcon {\n' +
-				'\tbackground-color: ' + a + ' !important;\n' +
-				'\tcolor: #ffffff !important;\n' +
+				'\tbackground-color: ' + withAlpha(a, 0.20) + ' !important;\n' +
+				'\tcolor: ' + a + ' !important;\n' +
 				'}\n';
 
 			var rp = '.' + this._widgetUid + '-pop';
