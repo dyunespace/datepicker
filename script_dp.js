@@ -22,7 +22,7 @@
 	'use strict';
 
 	var TAG   = 'com-sap-sac-datepicker-glp-main';
-	var BUILD = '2026-08-22 13:26 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
+	var BUILD = '2026-08-22 21:18 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
 	console.log('%c[datepicker] main build ' + BUILD, 'color:#346187;font-weight:bold');
 
 	// ────────────────────────────────────────────────────────────
@@ -142,6 +142,41 @@
 			if (want === 3 && t.length === 8) return [+t.slice(0, 4), +t.slice(4, 6), +t.slice(6)];
 		}
 		return null;
+	}
+
+	// 모드와 무관한 파서. 실패하면 null.
+	function parseDayStr (str) {
+		var g = numGroups(str, 3);
+		if (!g || g[1] < 1 || g[1] > 12 || g[2] < 1 || g[2] > 31) return null;
+		var d = new Date(g[0], g[1] - 1, g[2]);
+		// 2월 30일 같은 값이 다음 달로 넘어가는 것을 막는다.
+		if (d.getMonth() !== g[1] - 1 || d.getDate() !== g[2]) return null;
+		return d;
+	}
+
+	function parseMonthStr (str) {
+		var g = numGroups(str, 2);
+		if (!g || g[1] < 1 || g[1] > 12) return null;
+		return new Date(g[0], g[1] - 1, 1);
+	}
+
+	function parseWeekStr (str, rule) {
+		var g = numGroups(str, 2);
+		if (!g || g[1] < 1 || g[1] > 53) return null;
+		var d = weekToDate(g[0], g[1], rule);
+		// 52주뿐인 해에 53주를 넣는 경우를 걸러낸다.
+		var back = calcWeek(d, rule);
+		if (back.year !== g[0] || back.week !== g[1]) return null;
+		return d;
+	}
+
+	// 패턴이 어떤 종류의 값을 표현하는지 심볼로 판단한다.
+	function patternFits (pat, kind) {
+		var p = String(pat).replace(/'[^']*'/g, '');   // 따옴표 리터럴 제외
+		var hasDay = /d/.test(p), hasWeek = /w/.test(p), hasMonth = /M/.test(p);
+		if (kind === 'week')  return hasWeek;
+		if (kind === 'month') return hasMonth && !hasDay && !hasWeek;
+		return hasDay;
 	}
 
 	// ────────────────────────────────────────────────────────────
@@ -372,14 +407,8 @@
 				: '';
 		}
 
-		// 패턴이 현재 모드에 쓸 수 있는 것인지 심볼로 판단한다.
-		// 목록을 하드코딩하지 않아 사용자 지정 패턴에도 통한다.
 		_formatFitsMode (pat) {
-			var p = String(pat).replace(/'[^']*'/g, '');   // 따옴표 리터럴 제외
-			var hasDay = /d/.test(p), hasWeek = /w/.test(p), hasMonth = /M/.test(p);
-			if (this._dateMode === 'week')  return hasWeek;
-			if (this._dateMode === 'month') return hasMonth && !hasDay && !hasWeek;
-			return hasDay;
+			return patternFits(pat, this._dateMode);
 		}
 
 		// 팝업 캘린더의 주차 표기 기준을 입력창과 맞춘다.
@@ -547,23 +576,12 @@
 			}));
 		}
 
-		// 값 → 문자열. 자체 계산이라 로케일과 무관하게 결과가 고정된다.
+		// 값 → 문자열. 현재 모드 기준.
 		_formatOne (d) {
 			if (!isValidDate(d)) return '';
+			if (this._dateMode === 'week') return this._fmtWeek(d);
+
 			var pat = this._resolveDisplayFormat();
-
-			if (this._dateMode === 'week') {
-				var w  = calcWeek(d, this._weekRule);
-				var yy = String(w.year);
-				var ww = (w.week < 10 ? '0' : '') + w.week;
-				// 패턴에 주차 심볼이 없으면 기본 표기로.
-				if (!/w/.test(pat)) return yy + '.' + ww;
-				return pat.replace(/'([^']*)'/g, '$1')
-				          .replace(/Y+/g, yy)
-				          .replace(/w+/g, ww);
-			}
-
-			// day / month 는 UI5 공개 API 로 포맷.
 			if (!pat) return this._dp ? this._dp.getValue() : '';
 			if (!this._DateFormat) return '';
 			try {
@@ -576,30 +594,11 @@
 		// 성공하면 Date(또는 비우기면 null), 실패하면 undefined 를 돌려준다.
 		_parseByMode (str) {
 			if (str === null || str === undefined || String(str).trim() === '') return null;
-
-			var g, d;
-			if (this._dateMode === 'month') {
-				g = numGroups(str, 2);
-				if (!g || g[1] < 1 || g[1] > 12) return this._reject(str);
-				return new Date(g[0], g[1] - 1, 1);
-			}
-
-			if (this._dateMode === 'week') {
-				g = numGroups(str, 2);
-				if (!g || g[1] < 1 || g[1] > 53) return this._reject(str);
-				d = weekToDate(g[0], g[1], this._weekRule);
-				// 52주뿐인 해에 53주를 넣는 경우를 걸러낸다.
-				var back = calcWeek(d, this._weekRule);
-				if (back.year !== g[0] || back.week !== g[1]) return this._reject(str);
-				return d;
-			}
-
-			g = numGroups(str, 3);
-			if (!g || g[1] < 1 || g[1] > 12 || g[2] < 1 || g[2] > 31) return this._reject(str);
-			d = new Date(g[0], g[1] - 1, g[2]);
-			// 2월 30일 같은 값이 다음 달로 넘어가는 것을 막는다.
-			if (d.getMonth() !== g[1] - 1 || d.getDate() !== g[2]) return this._reject(str);
-			return d;
+			var d;
+			if (this._dateMode === 'month')     d = parseMonthStr(str);
+			else if (this._dateMode === 'week') d = parseWeekStr(str, this._weekRule);
+			else                                d = parseDayStr(str);
+			return d || this._reject(str);
 		}
 
 		_reject (str) {
@@ -622,6 +621,77 @@
 
 		getFormattedVal () {
 			return this._formatOne(this.getDateVal());
+		}
+
+		// ── 변환 전용 (위젯 값에 영향 없음) ──
+		//
+		// SAC 스크립트에서 ISO 주차를 직접 계산하려면 목요일 보정과
+		// 연말 경계까지 다뤄야 해서 만만치 않다. 그 계산을 그대로 빌려준다.
+		//
+		// 출력 형식은 '출력 종류에 맞는 형식이 설정돼 있으면 그것, 아니면 기본값'.
+		//   주차 → format 이 주차 패턴이면 그것, 아니면 YYYY.ww
+		//   날짜 → format 이 날짜 패턴이면 그것, 아니면 yyyy.MM.dd
+		// 입력 문자열은 구분자를 가리지 않는다. 2025.12.01 / 2025-12-01 / 20251201 모두 같다.
+
+		convertDateToWeek (dv) {
+			var d = this._toDate(dv);
+			if (!isValidDate(d)) return this._rejectConv(dv, '날짜');
+			return this._fmtWeek(d);
+		}
+
+		convertStrDateToWeek (s) {
+			var d = parseDayStr(s);
+			if (!d) return this._rejectConv(s, '날짜');
+			return this._fmtWeek(d);
+		}
+
+		convertWeekToFirstDate (s) {
+			var d = parseWeekStr(s, this._weekRule);
+			if (!d) return this._rejectConv(s, '주차');
+			return this._fmtDay(d);
+		}
+
+		convertWeekToEndDate (s) {
+			var d = parseWeekStr(s, this._weekRule);
+			if (!d) return this._rejectConv(s, '주차');
+			return this._fmtDay(new Date(d.getFullYear(), d.getMonth(), d.getDate() + 6));
+		}
+
+		convertMonthToEndDate (s) {
+			var d = parseMonthStr(s);
+			if (!d) return this._rejectConv(s, '월');
+			// 다음 달 0일 = 이번 달 마지막 날. 윤년도 자동으로 처리된다.
+			return this._fmtDay(new Date(d.getFullYear(), d.getMonth() + 1, 0));
+		}
+
+		_rejectConv (v, kind) {
+			console.warn('[datepicker] "' + v + '" 은(는) ' + kind + ' 형식으로 읽을 수 없습니다.');
+			return '';
+		}
+
+		// 주차 문자열. 자체 계산이라 로케일과 무관하다.
+		_fmtWeek (d) {
+			var pat = patternFits(this._format, 'week') ? this._format : 'YYYY.ww';
+			var w   = calcWeek(d, this._weekRule);
+			var yy  = String(w.year);
+			var ww  = (w.week < 10 ? '0' : '') + w.week;
+			return pat.replace(/'([^']*)'/g, '$1')
+			          .replace(/Y+/g, yy)
+			          .replace(/w+/g, ww);
+		}
+
+		// 날짜 문자열.
+		_fmtDay (d) {
+			var pat = patternFits(this._format, 'day') ? this._format : 'yyyy.MM.dd';
+			if (this._DateFormat) {
+				try { return this._DateFormat.getInstance({ pattern: pat }).format(d); }
+				catch (e) { /* 아래 수동 처리로 */ }
+			}
+			// UI5 포매터를 아직 못 쓰는 경우의 대비책.
+			var p = function (n) { return (n < 10 ? '0' : '') + n; };
+			return pat.replace(/yyyy/g, d.getFullYear())
+			          .replace(/MM/g, p(d.getMonth() + 1))
+			          .replace(/dd/g, p(d.getDate()));
 		}
 
 		// getFormattedVal() 이 돌려준 문자열을 그대로 다시 넣을 수 있다.
