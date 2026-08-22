@@ -12,14 +12,14 @@
 		{
 			"kind": "main",
 			"tag": "com-sap-sac-datepicker-glp-main",
-			"url": "https://dyunespace.github.io/datepicker/script_dp.js?v=20260822d",
+			"url": "https://dyunespace.github.io/datepicker/script_dp.js?v=20260822e",
 			"integrity": "",
 			"ignoreIntegrity": true
 		},
 		{
 			"kind": "styling",
 			"tag": "com-sap-sac-datepicker-glp-styling",
-			"url": "https://dyunespace.github.io/datepicker/styling_dp.js?v=20260822d",
+			"url": "https://dyunespace.github.io/datepicker/styling_dp.js?v=20260822e",
 			"integrity": "",
 			"ignoreIntegrity": true
 		}
@@ -115,6 +115,30 @@
 				}
 			],
 			"body": "this.dateVal = dv;"
+		},
+		"setToday": {
+			"description": "set the value to today, aligned to the current dateMode. week mode uses the first day of this week, month mode the first day of this month",
+			"parameters": []
+		},
+		"getToday": {
+			"returnType": "string",
+			"description": "get today as a string in the current dateMode format. does not change the selected value",
+			"parameters": []
+		},
+		"getTodayDate": {
+			"returnType": "string",
+			"description": "get today as a date string, regardless of the current dateMode. useful as input for the convert methods. uses formatDay, falling back to yyyy.MM.dd when it is set to Automatic",
+			"parameters": []
+		},
+		"shift": {
+			"description": "move the value by n steps in the current dateMode unit. day moves by days, week by weeks, month by months. when no value is selected today is used as the base, so shift(0) is the same as setToday()",
+			"parameters": [
+				{
+					"name": "n",
+					"type": "integer",
+					"description": "number of steps, negative moves backwards"
+				}
+			]
 		},
 		"getFormattedVal": {
 			"returnType": "string",
