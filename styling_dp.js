@@ -22,7 +22,7 @@
 	'use strict';
 
 	var TAG   = 'com-sap-sac-datepicker-glp-styling';
-	var BUILD = '2026-08-22 10:27 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
+	var BUILD = '2026-08-22 11:52 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
 	console.log('%c[datepicker] styling build ' + BUILD + ' (UI5)', 'color:#346187;font-weight:bold');
 
 	// 모드별 형식 선택지. key 가 실제 displayFormat 패턴.
@@ -246,6 +246,38 @@
 				}
 			});
 
+			// ── Accent Color ──
+			// 아이콘 · 팝업 헤더 · 선택 배경을 한꺼번에 바꾸는 색.
+			C.accentColor = new HTML({
+				content: "<div style='line-height:0'><input type='color' value='" +
+					(P.accentColor || DEFAULT_COLOR) +
+					"' style='width:100%;height:2.25rem;padding:2px;border:1px solid #bfbfbf;cursor:pointer;'></div>",
+				afterRendering: function () {
+					var dom   = this.getDomRef();
+					var input = dom && (dom.tagName === 'INPUT' ? dom : dom.querySelector('input'));
+					if (!input || input._dpBound) return;
+					input._dpBound = true;
+					input.addEventListener('change', function (ev) {
+						if (C.accentDefault) C.accentDefault.setSelected(false);
+						host.updateProp('accentColor', ev.target.value);
+					});
+				}
+			});
+
+			C.accentDefault = new CheckBox({
+				text: 'Use default',
+				selected: !P.accentColor,
+				select: function (e) {
+					var on = e.getParameter('selected');
+					if (on) {
+						host.updateProp('accentColor', '');
+					} else {
+						var input = host._accentInput();
+						host.updateProp('accentColor', input ? input.value : DEFAULT_COLOR);
+					}
+				}
+			});
+
 			// ── Font Style ──
 			C.fontStyle = new Select({
 				width: '100%',
@@ -301,6 +333,17 @@
 				if (i < 2) it.addStyleClass('sapUiTinyMarginEnd');
 			});
 
+			var accentRow = new HBox({
+				width: '100%',
+				items: [
+					field('Accent Color:', C.accentColor,   12),
+					field(' ',             C.accentDefault, 18)
+				]
+			});
+			accentRow.getItems().forEach(function (it, i) {
+				if (i < 1) it.addStyleClass('sapUiTinyMarginEnd');
+			});
+
 			var root = new VBox({
 				width: '100%',
 				items: [
@@ -310,6 +353,7 @@
 					C.weekHint,
 					fontRow,
 					styleRow,
+					accentRow,
 					field('Minimum Date Value:', C.minDate),
 					field('Maximum Date Value:', C.maxDate)
 				]
@@ -349,6 +393,7 @@
 				fontSize:    0,
 				fontStyle:   'Regular',
 				fontColor:   '',
+				accentColor: '',
 				minDateVal:  null,
 				maxDateVal:  null
 			};
@@ -417,6 +462,7 @@
 		set fontSize    (v) { this._prop('fontSize',    Number(v) || 0); }
 		set fontStyle   (v) { this._prop('fontStyle',   v || 'Regular'); }
 		set fontColor   (v) { this._prop('fontColor',   v || ''); }
+		set accentColor (v) { this._prop('accentColor', v || ''); }
 		set minDateVal  (v) { this._prop('minDateVal',  v || null); }
 		set maxDateVal  (v) { this._prop('maxDateVal',  v || null); }
 
@@ -427,6 +473,7 @@
 		get fontSize    () { return this._props.fontSize; }
 		get fontStyle   () { return this._props.fontStyle; }
 		get fontColor   () { return this._props.fontColor; }
+		get accentColor () { return this._props.accentColor; }
 		get minDateVal  () { return this._props.minDateVal; }
 		get maxDateVal  () { return this._props.maxDateVal; }
 
@@ -453,6 +500,13 @@
 		_colorInput () {
 			if (!this._C || !this._C.fontColor) return null;
 			var dom = this._C.fontColor.getDomRef();
+			if (!dom) return null;
+			return dom.tagName === 'INPUT' ? dom : dom.querySelector('input');
+		}
+
+		_accentInput () {
+			if (!this._C || !this._C.accentColor) return null;
+			var dom = this._C.accentColor.getDomRef();
 			if (!dom) return null;
 			return dom.tagName === 'INPUT' ? dom : dom.querySelector('input');
 		}
@@ -499,6 +553,10 @@
 			C.colorDefault.setSelected(!P.fontColor);
 			var input = this._colorInput();
 			if (input) input.value = P.fontColor || DEFAULT_COLOR;
+
+			C.accentDefault.setSelected(!P.accentColor);
+			var ai = this._accentInput();
+			if (ai) ai.value = P.accentColor || DEFAULT_COLOR;
 
 			C.minDate.setValue(toInputValue(this._toDate(P.minDateVal)));
 			C.maxDate.setValue(toInputValue(this._toDate(P.maxDateVal)));
