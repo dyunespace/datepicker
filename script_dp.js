@@ -8,19 +8,21 @@
  *
  * [모드]
  *   day   : 일반 날짜 캘린더            → yyyy.MM.dd
- *   week  : 일반 날짜 캘린더 + 주 스냅  → YYYY.ww   (주 첫날로 자동 선택)
- *   month : 12개월 버튼 그리드          → yyyy.MM
+ *   week  : 일반 날짜 캘린더 + 주 스냅  → YYYY.ww   (그 주 첫날로 자동 정렬)
+ *   month : 12개월 버튼 그리드 + 월 스냅 → yyyy.MM   (그 달 1일로 자동 정렬)
  *
  * [주차 규칙]
- *   ISO  = 월요일 시작 / 첫 목요일이 포함된 주가 1주차   (firstDayOfWeek 1, minimalDays 4)
- *   JAN1 = 월요일 시작 / 1월 1일이 포함된 주가 1주차      (1, 1)
- *   US   = 일요일 시작 / 1월 1일이 포함된 주가 1주차      (0, 1)
+ *   키는 UI5 공식 열거형 sap/base/i18n/date/CalendarWeekNumbering 을 따른다.
+ *
+ * [기간 선택]
+ *   지원하지 않는다. 컨트롤을 sap.m.DatePicker 하나로 고정해
+ *   프로퍼티 변경 시 컨트롤을 갈아끼우는 경로 자체를 없앴다.
  */
 (function () {
 	'use strict';
 
 	var TAG   = 'com-sap-sac-datepicker-glp-main';
-	var BUILD = '2026-08-21 22:55 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
+	var BUILD = '2026-08-22 10:27 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
 	console.log('%c[datepicker] main build ' + BUILD, 'color:#346187;font-weight:bold');
 
 	// ────────────────────────────────────────────────────────────
@@ -36,10 +38,7 @@
 	};
 
 	// 주차 규칙 → DateFormat 옵션 매핑.
-	// cwn 은 팝업 캘린더(sap.ui.unified.Calendar)에 넘길 열거형.
-	// JAN1 은 대응하는 열거형이 없어 null → 캘린더 팝업은 로케일 기본값을 쓴다.
-	// 주차 규칙 → DateFormat 옵션 매핑.
-	// 키는 UI5 공식 열거형 sap/base/i18n/date/CalendarWeekNumbering 을 그대로 쓴다.
+	// 키는 UI5 공식 열거형 CalendarWeekNumbering 을 그대로 쓴다.
 	// 그 열거형에 없는 '월요일 시작 + 1월 1일 포함 주' 조합만 MondayJan1 로 따로 둔다.
 	// cwn 은 팝업 캘린더(sap.ui.unified.Calendar)에 넘길 값.
 	var WEEK_RULES = {
@@ -56,6 +55,12 @@
 	function normRule (v) {
 		var k = WEEK_RULE_ALIAS[v] || v;
 		return WEEK_RULES[k] ? k : 'ISO_8601';
+	}
+
+	var MODES = { day: 1, week: 1, month: 1 };
+
+	function normMode (v) {
+		return MODES[v] ? v : 'day';
 	}
 
 	// 모드별 기본 표시 형식. day 의 '' 는 로케일 자동(Automatic).
@@ -91,8 +96,28 @@
 		return new Date(ws.getUTCFullYear(), ws.getUTCMonth(), ws.getUTCDate());
 	}
 
+	// 주 기준 연도 + 주차 → 그 주의 첫날.
+	function weekToDate (y, w, rule) {
+		var r  = WEEK_RULES[normRule(rule)];
+		var w1 = weekStartOf(Date.UTC(y, 0, r.minimalDaysInFirstWeek), r.firstDayOfWeek);
+		var d  = new Date(w1 + (w - 1) * 6048e5);
+		return new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+	}
+
 	function isValidDate (d) {
 		return d instanceof Date && !isNaN(d.getTime());
+	}
+
+	// 모드에 맞게 날짜를 정렬한다.
+	//   week  → 그 주 첫날
+	//   month → 그 달 1일
+	//   day   → 그대로
+	// 이 한 곳만 거치게 해서 값이 어디로 들어오든 결과가 같도록 한다.
+	function snapToMode (d, mode, rule) {
+		if (!isValidDate(d)) return null;
+		if (mode === 'week')  return weekStartDate(d, rule);
+		if (mode === 'month') return new Date(d.getFullYear(), d.getMonth(), 1);
+		return d;
 	}
 
 	// 문자열에서 숫자 덩어리를 뽑는다.
@@ -110,14 +135,6 @@
 		return null;
 	}
 
-	// 주 기준 연도 + 주차 → 그 주의 첫날.
-	function weekToDate (y, w, rule) {
-		var r  = WEEK_RULES[normRule(rule)];
-		var w1 = weekStartOf(Date.UTC(y, 0, r.minimalDaysInFirstWeek), r.firstDayOfWeek);
-		var d  = new Date(w1 + (w - 1) * 6048e5);
-		return new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
-	}
-
 	// ────────────────────────────────────────────────────────────
 	// <3> UI5 컨트롤 생성
 	// ────────────────────────────────────────────────────────────
@@ -132,23 +149,21 @@
 		// 그 사이 재생성/파기가 있었다면 이 콜백의 결과는 버린다.
 		var token = ++host._buildToken;
 
+		// MODULES 배열 순서 = 콜백 인자 순서. 어긋나면 조용히 오동작한다.
 		sap.ui.require([
 			'sap/m/DatePicker',
-			'sap/m/DateRangeSelection',
 			'sap/ui/core/format/DateFormat'
-		], function (DatePicker, DateRangeSelection, DateFormat) {
+		], function (DatePicker, DateFormat) {
 
 			// 늦게 도착한 콜백이면 아무것도 하지 않는다.
 			if (token !== host._buildToken || !host._container || !host.isConnected) return;
 
-			// MODULES 배열 순서 = 콜백 인자 순서. 어긋나면 조용히 오동작한다.
 			host._DateFormat = DateFormat;
 
-			var Ctor = host._enablerange ? DateRangeSelection : DatePicker;
-			var dp = new Ctor({
+			var dp = new DatePicker({
 				width: '100%',
 				displayFormat: host._resolveDisplayFormat(),
-				change: function (oEvent) { host._onChange(oEvent); }
+				change: function () { host._onChange(); }
 			});
 
 			dp.addStyleClass('datePicker').addStyleClass(host._widgetUid);
@@ -163,15 +178,15 @@
 			if (typeof dp._getFormatInstance === 'function') {
 				dp._getFormatInstance = function (oArgs) {
 					var r = WEEK_RULES[normRule(host._weekRule)];
-					oArgs.firstDayOfWeek           = r.firstDayOfWeek;
-					oArgs.minimalDaysInFirstWeek   = r.minimalDaysInFirstWeek;
+					oArgs.firstDayOfWeek         = r.firstDayOfWeek;
+					oArgs.minimalDaysInFirstWeek = r.minimalDaysInFirstWeek;
 					return DateFormat.getInstance(oArgs);
 				};
 			}
 
 			host._applyWeekNumbering(dp);
 			host._applyMinMax(dp);
-			host._applyValues(dp);
+			host._applyValue(dp);
 
 			if (token !== host._buildToken) { try { dp.destroy(); } catch (e) {} return; }
 
@@ -202,24 +217,22 @@
 
 		constructor () {
 			super();
-			this._widgetUid = 'dp-' + Math.random().toString(36).slice(2, 9);
+			this._widgetUid  = 'dp-' + Math.random().toString(36).slice(2, 9);
 			this._built      = false;
 			this._dp         = null;
 			this._mount      = null;
 			this._buildToken = 0;
 
-			this._dateMode    = 'day';
-			this._weekRule    = 'ISO_8601';
-			this._format      = '';
-			this._enablerange = false;
-			this._fontFamily  = '';
-			this._fontSize    = 0;
-			this._fontStyle   = 'Regular';
-			this._fontColor   = '';
-			this._dateVal       = null;
-			this._secondDateVal = null;
-			this._minDateVal    = null;
-			this._maxDateVal    = null;
+			this._dateMode   = 'day';
+			this._weekRule   = 'ISO_8601';
+			this._format     = '';
+			this._fontFamily = '';
+			this._fontSize   = 0;
+			this._fontStyle  = 'Regular';
+			this._fontColor  = '';
+			this._dateVal    = null;
+			this._minDateVal = null;
+			this._maxDateVal = null;
 		}
 
 		// <4-1> 화면에 배치될 때
@@ -277,45 +290,21 @@
 
 		// <4-2> SAC 프로퍼티 변경 수신
 		onCustomWidgetAfterUpdate (changed) {
-			var needRebuild = false;
-			var needFormat  = false;
+			if (!changed) return;
+			var needFormat = false;
 
-			if ('enablerange' in changed) {
-				var er = !!changed.enablerange;
-				// 값이 실제로 달라졌을 때만 재생성한다.
-				// SAC 가 변경 없는 프로퍼티까지 함께 보내는 경우가 있어,
-				// 무조건 재생성하면 선택값이 사라지고 화면이 깜빡인다.
-				if (er !== this._enablerange) {
-					this._enablerange = er;
-					needRebuild = true;                   // 컨트롤 클래스가 바뀐다
-				}
-			}
-			if ('dateMode' in changed) {
-				this._dateMode = changed.dateMode || 'day';
-				needFormat = true;
-			}
-			if ('format' in changed) {
-				this._format = changed.format || '';
-				needFormat = true;
-			}
-			if ('weekRule' in changed) {
-				this._weekRule = normRule(changed.weekRule);
-				needFormat = true;
-			}
-			if ('dateVal'       in changed) { this._dateVal       = this._toDate(changed.dateVal); }
-			if ('secondDateVal' in changed) { this._secondDateVal = this._toDate(changed.secondDateVal); }
-			if ('fontFamily'    in changed) { this._fontFamily    = changed.fontFamily || ''; }
-			if ('fontSize'      in changed) { this._fontSize      = Number(changed.fontSize) || 0; }
-			if ('fontStyle'     in changed) { this._fontStyle     = changed.fontStyle || 'Regular'; }
-			if ('fontColor'     in changed) { this._fontColor     = changed.fontColor || ''; }
-			if ('minDateVal'    in changed) { this._minDateVal    = this._toDate(changed.minDateVal); }
-			if ('maxDateVal'    in changed) { this._maxDateVal    = this._toDate(changed.maxDateVal); }
+			if ('dateMode' in changed) { this._dateMode = normMode(changed.dateMode); needFormat = true; }
+			if ('format'   in changed) { this._format   = changed.format || '';       needFormat = true; }
+			if ('weekRule' in changed) { this._weekRule = normRule(changed.weekRule); needFormat = true; }
 
-			if (needRebuild) {
-				this._destroyControl();
-				if (window.sap && window.sap.ui && window.sap.ui.require) buildUI5(this);
-				return;
-			}
+			if ('dateVal'    in changed) { this._dateVal    = this._toDate(changed.dateVal); }
+			if ('minDateVal' in changed) { this._minDateVal = this._toDate(changed.minDateVal); }
+			if ('maxDateVal' in changed) { this._maxDateVal = this._toDate(changed.maxDateVal); }
+
+			if ('fontFamily' in changed) { this._fontFamily = changed.fontFamily || ''; }
+			if ('fontSize'   in changed) { this._fontSize   = Number(changed.fontSize) || 0; }
+			if ('fontStyle'  in changed) { this._fontStyle  = changed.fontStyle || 'Regular'; }
+			if ('fontColor'  in changed) { this._fontColor  = changed.fontColor || ''; }
 
 			if (!this._dp) return;
 
@@ -324,7 +313,7 @@
 				this._applyWeekNumbering(this._dp);
 			}
 			this._applyMinMax(this._dp);
-			this._applyValues(this._dp);
+			this._applyValue(this._dp);
 			this._applyBaseStyle();
 		}
 
@@ -390,28 +379,14 @@
 			if (typeof dp.setMaxDate === 'function') dp.setMaxDate(this._maxDateVal || null);
 		}
 
-		_applyValues (dp) {
+		// 값은 항상 현재 모드에 맞춰 정렬한 뒤 컨트롤에 넣는다.
+		_applyValue (dp) {
 			if (!dp) return;
-			var start = this._dateVal;
-
-			// 주 모드에서는 항상 주의 첫날을 가리키게 정렬한다.
-			if (this._dateMode === 'week' && isValidDate(start)) {
-				start = weekStartDate(start, this._weekRule);
-			}
-
-			dp.setDateValue(start || null);
-
-			if (this._enablerange && typeof dp.setSecondDateValue === 'function') {
-				var end = this._secondDateVal;
-				if (this._dateMode === 'week' && isValidDate(end)) {
-					end = weekStartDate(end, this._weekRule);
-				}
-				dp.setSecondDateValue(end || null);
-			}
+			var snapped = snapToMode(this._dateVal, this._dateMode, this._weekRule);
+			this._dateVal = snapped;
+			dp.setDateValue(snapped || null);
 		}
 
-		// UI5 입력 필드의 기본 테두리를 지워 SAC 배경에 자연스럽게 얹는다.
-		// uid 로 스코프해 같은 스토리의 다른 위젯에 영향을 주지 않는다.
 		_applyBaseStyle () {
 			if (!this._styleEl) return;
 			var u = '.' + this._widgetUid;
@@ -454,49 +429,32 @@
 			this._styleEl.textContent = css;
 		}
 
-		// <4-3> 값 변경 시 SAC 로 통보
-		_onChange (oEvent) {
+		// <4-3> 사용자가 값을 바꿨을 때
+		_onChange () {
 			if (!this._dp) return;
 
-			var start = this._dp.getDateValue();
-			var end   = (this._enablerange && typeof this._dp.getSecondDateValue === 'function')
-				? this._dp.getSecondDateValue() : null;
+			// 사용자가 주중/월중 아무 날이나 골라도 모드에 맞게 정렬한다.
+			var picked = snapToMode(this._dp.getDateValue(), this._dateMode, this._weekRule);
+			this._dateVal = picked;
+			this._dp.setDateValue(picked || null);
 
-			// 주 모드: 사용자가 주중 아무 날이나 골라도 그 주의 첫날로 스냅.
-			if (this._dateMode === 'week') {
-				if (isValidDate(start)) {
-					start = weekStartDate(start, this._weekRule);
-					this._dp.setDateValue(start);
-				}
-				if (isValidDate(end)) {
-					end = weekStartDate(end, this._weekRule);
-					if (typeof this._dp.setSecondDateValue === 'function') {
-						this._dp.setSecondDateValue(end);
-					}
-				}
-			}
-
-			this._dateVal       = start || null;
-			this._secondDateVal = end   || null;
-
-			this.dispatchEvent(new CustomEvent('propertiesChanged', {
-				detail: {
-					properties: {
-						dateVal:       this._dateVal,
-						secondDateVal: this._secondDateVal
-					}
-				}
-			}));
+			this._fire({ dateVal: this._dateVal });
 			this.dispatchEvent(new CustomEvent('onChange'));
 		}
 
+		_fire (props) {
+			this.dispatchEvent(new CustomEvent('propertiesChanged', {
+				detail: { properties: props }
+			}));
+		}
+
 		// 값 → 문자열. 자체 계산이라 로케일과 무관하게 결과가 고정된다.
-		_format1 (d) {
+		_formatOne (d) {
 			if (!isValidDate(d)) return '';
 			var pat = this._resolveDisplayFormat();
 
 			if (this._dateMode === 'week') {
-				var w = calcWeek(d, this._weekRule);
+				var w  = calcWeek(d, this._weekRule);
 				var yy = String(w.year);
 				var ww = (w.week < 10 ? '0' : '') + w.week;
 				// 패턴에 주차 심볼이 없으면 기본 표기로.
@@ -514,72 +472,6 @@
 			} catch (e) {
 				return '';
 			}
-		}
-
-		// ── SAC 스크립트 API (manifest 의 body 없는 메서드들) ──
-
-		clear () {
-			this._dateVal = null;
-			this._secondDateVal = null;
-			if (this._dp) {
-				this._dp.setDateValue(null);
-				if (typeof this._dp.setSecondDateValue === 'function') {
-					this._dp.setSecondDateValue(null);
-				}
-			}
-			this.dispatchEvent(new CustomEvent('propertiesChanged', {
-				detail: { properties: { dateVal: null, secondDateVal: null } }
-			}));
-		}
-
-		getDateVal () {
-			var d = this._dp ? this._dp.getDateValue() : this._dateVal;
-			return isValidDate(d) ? d : undefined;
-		}
-
-		getSecondDateVal () {
-			if (!this._enablerange) return undefined;
-			var d = (this._dp && typeof this._dp.getSecondDateValue === 'function')
-				? this._dp.getSecondDateValue() : this._secondDateVal;
-			return isValidDate(d) ? d : undefined;
-		}
-
-		getFormattedVal () {
-			return this._format1(this.getDateVal());
-		}
-
-		getSecondFormattedVal () {
-			if (!this._enablerange) return '';
-			return this._format1(this.getSecondDateVal());
-		}
-
-		// getFormattedVal() 이 돌려준 문자열을 그대로 다시 넣을 수 있다.
-		// 현재 dateMode 를 기준으로 해석하며, 모드 자체를 바꾸지는 않는다.
-		setFormattedVal (s) {
-			this._setFormatted(s, false);
-		}
-
-		setSecondFormattedVal (s) {
-			if (!this._enablerange) return;
-			this._setFormatted(s, true);
-		}
-
-		_setFormatted (str, isSecond) {
-			var d = this._parseByMode(str);
-			if (d === undefined) return;              // 형식이 어긋나면 아무것도 하지 않는다
-
-			if (isSecond) this._secondDateVal = d;
-			else          this._dateVal       = d;
-
-			this._applyValues(this._dp);
-			this.dispatchEvent(new CustomEvent('propertiesChanged', {
-				detail: {
-					properties: {
-						dateVal:       this._dateVal,
-						secondDateVal: this._secondDateVal
-					}
-				}
-			}));
 		}
 
 		// 성공하면 Date(또는 비우기면 null), 실패하면 undefined 를 돌려준다.
@@ -614,6 +506,34 @@
 		_reject (str) {
 			console.warn('[datepicker] "' + str + '" 은(는) 현재 모드(' + this._dateMode + ')의 형식과 맞지 않습니다.');
 			return undefined;
+		}
+
+		// ── SAC 스크립트 API (manifest 의 body 없는 메서드들) ──
+
+		clear () {
+			this._dateVal = null;
+			if (this._dp) this._dp.setDateValue(null);
+			this._fire({ dateVal: null });
+		}
+
+		getDateVal () {
+			var d = this._dp ? this._dp.getDateValue() : this._dateVal;
+			return isValidDate(d) ? d : undefined;
+		}
+
+		getFormattedVal () {
+			return this._formatOne(this.getDateVal());
+		}
+
+		// getFormattedVal() 이 돌려준 문자열을 그대로 다시 넣을 수 있다.
+		// 현재 dateMode 를 기준으로 해석하며, 모드 자체를 바꾸지는 않는다.
+		setFormattedVal (s) {
+			var d = this._parseByMode(s);
+			if (d === undefined) return;              // 형식이 어긋나면 아무것도 하지 않는다
+
+			this._dateVal = snapToMode(d, this._dateMode, this._weekRule);
+			this._applyValue(this._dp);
+			this._fire({ dateVal: this._dateVal });
 		}
 	}
 
