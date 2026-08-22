@@ -22,7 +22,7 @@
 	'use strict';
 
 	var TAG   = 'com-sap-sac-datepicker-glp-styling';
-	var BUILD = '2026-08-21 22:30 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
+	var BUILD = '2026-08-22 10:27 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
 	console.log('%c[datepicker] styling build ' + BUILD + ' (UI5)', 'color:#346187;font-weight:bold');
 
 	// 모드별 형식 선택지. key 가 실제 displayFormat 패턴.
@@ -256,15 +256,6 @@
 				}
 			});
 
-			// ── Miscellaneous ──
-			C.range = new CheckBox({
-				text: 'Enable date range selection',
-				selected: !!P.enablerange,
-				select: function (e) {
-					host.updateProp('enablerange', e.getParameter('selected'));
-				}
-			});
-
 			// ── Min / Max ──
 			function makeDate (propName) {
 				return new DatePicker({
@@ -319,7 +310,6 @@
 					C.weekHint,
 					fontRow,
 					styleRow,
-					field('Miscellaneous:',      C.range),
 					field('Minimum Date Value:', C.minDate),
 					field('Maximum Date Value:', C.maxDate)
 				]
@@ -355,7 +345,6 @@
 				dateMode:    'day',
 				format:      '',
 				weekRule:    'ISO_8601',
-				enablerange: false,
 				fontFamily:  '',
 				fontSize:    0,
 				fontStyle:   'Regular',
@@ -424,7 +413,6 @@
 		set dateMode    (v) { this._prop('dateMode',    v || 'day'); }
 		set format      (v) { this._prop('format',      v || ''); }
 		set weekRule    (v) { this._prop('weekRule',    normRule(v)); }
-		set enablerange (v) { this._prop('enablerange', !!v); }
 		set fontFamily  (v) { this._prop('fontFamily',  v || ''); }
 		set fontSize    (v) { this._prop('fontSize',    Number(v) || 0); }
 		set fontStyle   (v) { this._prop('fontStyle',   v || 'Regular'); }
@@ -435,7 +423,6 @@
 		get dateMode    () { return this._props.dateMode; }
 		get format      () { return this._props.format; }
 		get weekRule    () { return this._props.weekRule; }
-		get enablerange () { return this._props.enablerange; }
 		get fontFamily  () { return this._props.fontFamily; }
 		get fontSize    () { return this._props.fontSize; }
 		get fontStyle   () { return this._props.fontStyle; }
@@ -508,7 +495,6 @@
 			C.fontFamily.setSelectedKey(P.fontFamily || '');
 			C.fontStyle.setSelectedKey(P.fontStyle || 'Regular');
 			C.fontSize.setValue(P.fontSize ? String(P.fontSize) : '');
-			C.range.setSelected(!!P.enablerange);
 
 			C.colorDefault.setSelected(!P.fontColor);
 			var input = this._colorInput();
