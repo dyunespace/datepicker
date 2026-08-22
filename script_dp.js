@@ -22,7 +22,7 @@
 	'use strict';
 
 	var TAG   = 'com-sap-sac-datepicker-glp-main';
-	var BUILD = '2026-08-22 12:25 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
+	var BUILD = '2026-08-22 12:50 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
 	console.log('%c[datepicker] main build ' + BUILD, 'color:#346187;font-weight:bold');
 
 	// ────────────────────────────────────────────────────────────
@@ -493,12 +493,12 @@
 			var css =
 				u + ' .sapMInputBaseIcon { color: ' + a + ' !important; }\n' +
 				u + ' .sapMInputBaseIcon:hover {\n' +
-				'\tbackground-color: ' + withAlpha(a, 0.12) + ' !important;\n' +
+				'\tbackground-color: ' + withAlpha(a, 0.20) + ' !important;\n' +
 				'}\n' +
 				// 눌린 상태는 원색으로 꽉 채우면 아이콘이 묻히고 눈에 튄다.
 				// UI5 기본처럼 옅은 음영만 깔고 아이콘 자체는 강조색으로 남긴다.
 				u + '.sapMInputBaseIconPressed .sapMInputBaseIcon {\n' +
-				'\tbackground-color: ' + withAlpha(a, 0.20) + ' !important;\n' +
+				'\tbackground-color: ' + withAlpha(a, 0.38) + ' !important;\n' +
 				'\tcolor: ' + a + ' !important;\n' +
 				'}\n';
 
