@@ -22,7 +22,7 @@
 	'use strict';
 
 	var TAG   = 'com-sap-sac-datepicker-glp-main';
-	var BUILD = '2026-08-22 13:16 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
+	var BUILD = '2026-08-22 13:26 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
 	console.log('%c[datepicker] main build ' + BUILD, 'color:#346187;font-weight:bold');
 
 	// ────────────────────────────────────────────────────────────
@@ -442,6 +442,14 @@
 				// 래퍼까지 포함해 선택자 우선순위를 올린다.
 				css += u + ' .sapMInputBaseContentWrapper .sapMInputBaseInner { ' + decl.join(' ') + ' }\n';
 			}
+
+			// 팝업 캘린더 가운데 정렬.
+			// .sapUiCal 은 display:inline-block 이라 자체 폭이 내용에 맞춰 정해지는데,
+			// 팝오버 내용 영역은 21rem 으로 고정돼 있어 남는 폭이 전부 오른쪽에 몰린다.
+			// 캘린더 내부는 건드리지 않고 부모에서 가운데로 밀어 준다.
+			var pop = '.' + this._widgetUid + '-pop';
+			css += pop + ' .sapMPopoverCont,\n' +
+			       pop + ' .sapMPopoverScroll { text-align: center; }\n';
 
 			css += this._accentCss(u);
 			this._styleEl.textContent = css;
