@@ -22,7 +22,7 @@
 	'use strict';
 
 	var TAG   = 'com-sap-sac-datepicker-glp-main';
-	var BUILD = '2026-08-22 22:18 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
+	var BUILD = '2026-08-24 08:38 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
 	console.log('%c[datepicker] main build ' + BUILD, 'color:#346187;font-weight:bold');
 
 	// ────────────────────────────────────────────────────────────
@@ -56,6 +56,10 @@
 		var k = WEEK_RULE_ALIAS[v] || v;
 		return WEEK_RULES[k] ? k : 'ISO_8601';
 	}
+
+	// UI5 Compact 밀도의 입력 필드 높이(1.625rem). 이보다 작게 그리지 않는다.
+	// SAC 기본 위젯은 리사이즈 핸들 자체가 막히지만 커스텀 위젯은 그 장치를 못 쓴다.
+	var MIN_HEIGHT = 26;
 
 	var MODES = { day: 1, week: 1, month: 1 };
 
@@ -233,6 +237,7 @@
 				};
 			}
 
+			host._applyPlaceholder(dp);
 			host._applyWeekNumbering(dp);
 			host._applyMinMax(dp);
 			host._applyValue(dp);
@@ -248,7 +253,7 @@
 			// 또한 placeAt 대상 노드는 UIArea 가 내용을 관리하므로
 			// <style> 태그와 섞이지 않도록 분리한다.
 			host._mount = document.createElement('div');
-			host._mount.style.cssText = 'width:100%;';
+			host._mount.style.cssText = 'width:100%;flex:1 1 auto;';
 			host._container.appendChild(host._mount);
 
 			dp.placeAt(host._mount);
@@ -294,8 +299,12 @@
 		connectedCallback () {
 			if (!this._container) {
 				this._container = document.createElement('div');
-				this._container.className = this._widgetUid;
-				this._container.style.cssText = 'width:100%;height:100%;';
+				// sapUiSizeCompact 를 붙이면 입력 필드 높이가 1.625rem(26px)로 고정된다.
+				// SAC 가 어떤 밀도로 렌더링하든 결과가 같아진다.
+				this._container.className = this._widgetUid + ' sapUiSizeCompact';
+				this._container.style.cssText =
+					'width:100%;height:100%;min-height:' + MIN_HEIGHT + 'px;' +
+					'display:flex;align-items:center;';
 				this.appendChild(this._container);
 
 				this._styleEl = document.createElement('style');
@@ -337,10 +346,10 @@
 		}
 
 		onCustomWidgetResize (width, height) {
-			if (this._container) {
-				this._container.style.width  = width  + 'px';
-				this._container.style.height = height + 'px';
-			}
+			if (!this._container) return;
+			this._container.style.width  = width + 'px';
+			// 26 아래로는 줄이지 않는다. 더 끌어도 입력 필드는 온전히 보인다.
+			this._container.style.height = Math.max(MIN_HEIGHT, height) + 'px';
 		}
 
 		// <4-2> SAC 프로퍼티 변경 수신
@@ -368,6 +377,7 @@
 
 			if (needFormat) {
 				this._dp.setDisplayFormat(this._resolveDisplayFormat());
+				this._applyPlaceholder(this._dp);
 				this._applyWeekNumbering(this._dp);
 			}
 			this._applyMinMax(this._dp);
@@ -409,6 +419,35 @@
 			if (this._dateMode === 'week')  return this._formatWeek  || 'YYYY.ww';
 			if (this._dateMode === 'month') return this._formatMonth || 'yyyy.MM';
 			return this._formatDay === undefined ? 'yyyy.MM.dd' : this._formatDay;
+		}
+
+		// 비어 있을 때 보이는 예시 문자열.
+		// UI5 기본값은 언어 리소스의 "date.placeholder"(= "e.g. {0}") 라서
+		// 앞에 'e.g. ' 가 붙는다. 예시 날짜만 남기고 접두사는 뺀다.
+		// placeholder 를 빈 문자열로 두면 UI5 가 다시 기본값을 만들어 넣으므로
+		// 우리가 만든 문자열을 명시적으로 넣어야 한다.
+		_applyPlaceholder (dp) {
+			if (!dp || typeof dp.setPlaceholder !== 'function') return;
+
+			var sample = new Date(2026, 11, 31);   // 12/31 - 자릿수가 모두 두 자리라 예시로 적합
+			var text;
+			if (this._dateMode === 'week') {
+				text = this._fmtWeek(sample);
+			} else {
+				var pat = this._resolveDisplayFormat();
+				if (!pat) {
+					// Automatic 이면 UI5 가 만든 문자열에서 접두사만 떼어낸다.
+					try {
+						var auto = dp._getPlaceholder ? dp._getPlaceholder() : '';
+						text = String(auto).replace(/^[^0-9]*/, '');
+					} catch (e) { text = ''; }
+				} else if (this._DateFormat) {
+					try { text = this._DateFormat.getInstance({ pattern: pat }).format(sample); }
+					catch (e) { text = ''; }
+				}
+			}
+			// 빈 문자열을 넣으면 UI5 가 기본 예시를 되살리므로 공백 한 칸으로 막는다.
+			dp.setPlaceholder(text || ' ');
 		}
 
 		// 팝업 캘린더의 주차 표기 기준을 입력창과 맞춘다.
