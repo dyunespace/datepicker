@@ -22,7 +22,7 @@
 	'use strict';
 
 	var TAG   = 'com-sap-sac-datepicker-glp-main';
-	var BUILD = '2026-08-24 22:06 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
+	var BUILD = '2026-08-24 22:14 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
 	console.log('%c[datepicker] main build ' + BUILD, 'color:#346187;font-weight:bold');
 
 	// ────────────────────────────────────────────────────────────
@@ -569,10 +569,20 @@
 			       '\tline-height: ' + h + 'px !important;\n' +
 			       '}\n' +
 			       // 아이콘도 함께 줄이지 않으면 세로 중심이 어긋나거나 밖으로 삐져나온다.
-			       c + ' .sapMInputBaseIconContainer,\n' +
+			       // 다만 line-height 만으로는 살짝 아래로 치우친다.
+			       // SAP-icons 글리프의 세로 기준선이 문자 상자 정중앙이 아니기 때문이다.
+			       // flex 로 가운데 정렬해 글꼴 기준선과 무관하게 맞춘다.
+			       c + ' .sapMInputBaseIconContainer {\n' +
+			       '\theight: ' + h + 'px !important;\n' +
+			       '\tdisplay: flex !important;\n' +
+			       '\talign-items: center !important;\n' +
+			       '}\n' +
 			       c + ' .sapMInputBaseIcon {\n' +
 			       '\theight: ' + h + 'px !important;\n' +
 			       '\tline-height: ' + h + 'px !important;\n' +
+			       '\tdisplay: flex !important;\n' +
+			       '\talign-items: center !important;\n' +
+			       '\tjustify-content: center !important;\n' +
 			       '}\n';
 		}
 
