@@ -22,7 +22,7 @@
 	'use strict';
 
 	var TAG   = 'com-sap-sac-datepicker-glp-styling';
-	var BUILD = '2026-08-24 22:49 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
+	var BUILD = '2026-08-25 08:03 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
 	console.log('%c[datepicker] styling build ' + BUILD + ' (UI5)', 'color:#346187;font-weight:bold');
 
 	// 모드별 형식 선택지. key 가 실제 displayFormat 패턴.
@@ -87,7 +87,6 @@
 		return WEEK_RULES.some(function (r) { return r.k === k; }) ? k : 'ISO_8601';
 	}
 
-	var DEFAULT_COLOR = '#333333';
 
 	function toInputValue (d) {
 		if (!(d instanceof Date) || isNaN(d.getTime())) return '';
@@ -112,13 +111,12 @@
 			'sap/m/Select',
 			'sap/ui/core/Item',
 			'sap/m/ComboBox',
-			'sap/m/CheckBox',
 			'sap/m/DatePicker',
 			'sap/ui/core/HTML',
 			'sap/m/Text',
 			'sap/m/Button',
 			'sap/m/ColorPalettePopover'
-		], function (VBox, HBox, FlexItemData, Label, Select, Item, ComboBox, CheckBox, DatePicker, HTML, Text, Button, ColorPalettePopover) {
+		], function (VBox, HBox, FlexItemData, Label, Select, Item, ComboBox, DatePicker, HTML, Text, Button, ColorPalettePopover) {
 
 			if (token !== host._buildToken || !host._container || !host.isConnected) return;
 
@@ -225,61 +223,39 @@
 			// 트리 위젯과 동일하게 네이티브 색상 입력을 HTML 로 감싼다.
 			// 비활성화하지 않는다. 색을 고르면 'Use default' 가 자동으로 풀리므로
 			// 스와치를 누르는 것만으로 바로 적용된다.
-			C.fontColor = new HTML({
-				content: "<div style='line-height:0'><input type='color' value='" +
-					(P.fontColor || DEFAULT_COLOR) +
-					"' style='width:100%;height:2.25rem;padding:2px;border:1px solid #bfbfbf;cursor:pointer;'></div>",
-				afterRendering: function () {
-					var dom   = this.getDomRef();
-					var input = dom && (dom.tagName === 'INPUT' ? dom : dom.querySelector('input'));
-					if (!input || input._dpBound) return;
-					input._dpBound = true;      // 재렌더링 시 중복 부착 방지
-					input.addEventListener('change', function (ev) {
-						if (C.colorDefault) C.colorDefault.setSelected(false);
-						host.updateProp('fontColor', ev.target.value);
-					});
-				}
-			});
-
-			C.colorDefault = new CheckBox({
-				text: 'Use default',
-				selected: !P.fontColor,
-				select: function (e) {
-					var on = e.getParameter('selected');
-					if (on) {
-						host.updateProp('fontColor', '');
-					} else {
-						var input = host._colorInput();
-						host.updateProp('fontColor', input ? input.value : DEFAULT_COLOR);
-					}
-				}
-			});
-
-			// ── Accent Color ──
+			// ── 색상 컨트롤 ──
 			// SAC 기본 스타일 패널과 같은 계열인 sap.m.ColorPalettePopover 를 쓴다.
 			// 팔레트 안에 기본색 버튼이 들어 있어 'Use default' 체크박스가 필요 없다.
-			C.accentBtn = new Button({
-				width: '100%',
-				tooltip: 'Accent Color',
-				press: function (e) { C.accentPalette.openBy(e.getSource()); }
-			});
-			// 버튼 자체를 색 견본으로 쓴다. 렌더링 후 배경을 현재 값으로 칠한다.
-			C.accentBtn.addEventDelegate({
-				onAfterRendering: function () { host._paintAccentBtn(); }
-			});
+			// 버튼 자체가 견본이 된다. 값이 없으면 체크무늬로 '테마 기본'임을 나타낸다.
+			function colorPicker (propName, tooltip) {
+				var btn = new Button({
+					width: '2.5rem',
+					tooltip: tooltip,
+					press: function (e) { pop.openBy(e.getSource()); }
+				});
+				var pop = new ColorPalettePopover({
+					defaultColor: '#346187',
+					showDefaultColorButton: true,
+					showMoreColorsButton: true,
+					showRecentColorsSection: true,
+					colorSelect: function (e) {
+						// 기본색 버튼을 누르면 빈 값으로 되돌려 테마 색을 그대로 쓰게 한다.
+						var isDefault = e.getParameter('defaultAction');
+						host.updateProp(propName, isDefault ? '' : e.getParameter('value'));
+						host._paintSwatch(propName);
+					}
+				});
+				btn.addEventDelegate({
+					onAfterRendering: function () { host._paintSwatch(propName); }
+				});
+				C[propName + 'Pop'] = pop;
+				return btn;
+			}
 
-			C.accentPalette = new ColorPalettePopover({
-				defaultColor: '#346187',
-				showDefaultColorButton: true,
-				showMoreColorsButton: true,
-				showRecentColorsSection: true,
-				colorSelect: function (e) {
-					// 기본색 버튼을 누르면 빈 값으로 되돌려 테마 색을 그대로 쓰게 한다.
-					var isDefault = e.getParameter('defaultAction');
-					host.updateProp('accentColor', isDefault ? '' : e.getParameter('value'));
-					host._paintAccentBtn();
-				}
-			});
+			C.accentColor        = colorPicker('accentColor',        'Accent Color');
+			C.fontColor          = colorPicker('fontColor',          'Font Color');
+			C.controlBackground  = colorPicker('controlBackground',  'Control Background');
+			C.controlBorderColor = colorPicker('controlBorderColor', 'Control Border');
 
 			// ── Font Style ──
 			C.fontStyle = new Select({
@@ -309,26 +285,6 @@
 					host.updateProp('controlHeight', n);
 				}
 			});
-
-			// ── Control Border / Background ──
-			function colorField (propName, initial) {
-				var html = new HTML({
-					content: "<div style='line-height:0'><input type='color' value='" + (initial || '#ffffff') +
-						"' style='width:100%;height:2.25rem;padding:2px;border:1px solid #bfbfbf;cursor:pointer;'></div>",
-					afterRendering: function () {
-						var dom   = this.getDomRef();
-						var input = dom && (dom.tagName === 'INPUT' ? dom : dom.querySelector('input'));
-						if (!input || input._dpBound) return;
-						input._dpBound = true;
-						input.addEventListener('change', function (ev) {
-							host.updateProp(propName, ev.target.value);
-						});
-					}
-				});
-				return html;
-			}
-			C.controlBackground  = colorField('controlBackground',  P.controlBackground);
-			C.controlBorderColor = colorField('controlBorderColor', P.controlBorderColor);
 
 			// ── Min / Max ──
 			function makeDate (propName) {
@@ -363,8 +319,7 @@
 				width: '100%',
 				items: [
 					field('Font Style:', C.fontStyle, 12),
-					new VBox({ items: [], layoutData: new FlexItemData({ growFactor: 10, baseSize: '0%' }) }),
-					field(' ', C.colorDefault, 8)
+					new VBox({ items: [], layoutData: new FlexItemData({ growFactor: 18, baseSize: '0%' }) })
 				]
 			});
 			// HBox 자식 사이 간격
@@ -576,14 +531,6 @@
 			return isNaN(d.getTime()) ? null : d;
 		}
 
-		// 색상 입력 DOM 을 안전하게 찾는다.
-		_colorInput () {
-			if (!this._C || !this._C.fontColor) return null;
-			var dom = this._C.fontColor.getDomRef();
-			if (!dom) return null;
-			return dom.tagName === 'INPUT' ? dom : dom.querySelector('input');
-		}
-
 		// 형식 셀렉트를 지정 모드의 목록으로 채우고, 저장된 값을 선택한다.
 		_fillFormatItems (C, mode) {
 			if (!C || !C.format || !this._ItemCtor) return;
@@ -597,25 +544,26 @@
 		// 버튼을 색 견본으로 쓴다.
 		// UI5 버튼은 바깥 요소가 아니라 안쪽 .sapMBtnInner 가 실제로 그려지므로
 		// 거기에 칠해야 한다. 바깥에 칠하면 테두리처럼 삐져나온다.
-		_paintAccentBtn () {
-			if (!this._C || !this._C.accentBtn) return;
-			var root = this._C.accentBtn.getDomRef();
+		_paintSwatch (propName) {
+			if (!this._C || !this._C[propName]) return;
+			var root = this._C[propName].getDomRef();
 			if (!root) return;
 			var el = root.querySelector('.sapMBtnInner') || root;
-			var v  = this._props.accentColor;
+			var v  = this._props[propName];
 
-			el.style.border = '1px solid #bfbfbf';
+			el.style.border    = '1px solid #bfbfbf';
 			el.style.boxShadow = 'none';
-			el.style.minWidth = '0';
-			if (v) {
-				el.style.background = v;
-			} else {
+			el.style.minWidth  = '0';
+			el.style.background = v ? v :
 				// 값이 없으면 체크무늬로 '테마 기본'임을 나타낸다.
-				el.style.background =
-					'linear-gradient(45deg,#ddd 25%,transparent 25%,transparent 75%,#ddd 75%) 0 0/8px 8px,' +
-					'linear-gradient(45deg,#ddd 25%,transparent 25%,transparent 75%,#ddd 75%) 4px 4px/8px 8px,' +
-					'#fff';
-			}
+				'linear-gradient(45deg,#ddd 25%,transparent 25%,transparent 75%,#ddd 75%) 0 0/8px 8px,' +
+				'linear-gradient(45deg,#ddd 25%,transparent 25%,transparent 75%,#ddd 75%) 4px 4px/8px 8px,' +
+				'#fff';
+		}
+
+		_paintAllSwatches () {
+			['accentColor', 'fontColor', 'controlBackground', 'controlBorderColor']
+				.forEach(function (k) { this._paintSwatch(k); }.bind(this));
 		}
 
 		_hintOf (key) {
@@ -648,18 +596,9 @@
 			C.fontStyle.setSelectedKey(P.fontStyle || 'Regular');
 			C.fontSize.setValue(P.fontSize ? String(P.fontSize) : '');
 
-			C.colorDefault.setSelected(!P.fontColor);
-			var input = this._colorInput();
-			if (input) input.value = P.fontColor || DEFAULT_COLOR;
-
-			this._paintAccentBtn();
+			this._paintAllSwatches();
 
 			C.controlHeight.setValue(P.controlHeight ? String(P.controlHeight) : '');
-			['controlBackground', 'controlBorderColor'].forEach(function (k) {
-				var dom = C[k] && C[k].getDomRef();
-				var inp = dom && (dom.tagName === 'INPUT' ? dom : dom.querySelector('input'));
-				if (inp && P[k]) inp.value = P[k];
-			});
 
 			C.minDate.setValue(toInputValue(this._toDate(P.minDateVal)));
 			C.maxDate.setValue(toInputValue(this._toDate(P.maxDateVal)));
