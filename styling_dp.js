@@ -22,7 +22,7 @@
 	'use strict';
 
 	var TAG   = 'com-sap-sac-datepicker-glp-styling';
-	var BUILD = '2026-08-25 08:16 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
+	var BUILD = '2026-08-25 08:18 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
 	console.log('%c[datepicker] styling build ' + BUILD + ' (UI5)', 'color:#346187;font-weight:bold');
 
 	// 모드별 형식 선택지. key 가 실제 displayFormat 패턴.
@@ -223,13 +223,11 @@
 			// 트리 위젯과 동일하게 네이티브 색상 입력을 HTML 로 감싼다.
 			// 비활성화하지 않는다. 색을 고르면 'Use default' 가 자동으로 풀리므로
 			// 스와치를 누르는 것만으로 바로 적용된다.
-			// ── 색상 컨트롤 ──
-			// SAC 기본 스타일 패널과 같은 계열인 sap.m.ColorPalettePopover 를 쓴다.
-			// 팔레트 안에 기본색 버튼이 들어 있어 'Use default' 체크박스가 필요 없다.
-			// 버튼 자체가 견본이 된다. 값이 없으면 체크무늬로 '테마 기본'임을 나타낸다.
+			// 색 견본 버튼 + 팔레트. 네 곳이 같은 방식을 쓴다.
+			// 팔레트 안에 기본색 버튼이 있어 'Use default' 체크박스가 필요 없다.
 			function colorPicker (propName, tooltip) {
 				var btn = new Button({
-					width: '2.5rem',
+					width: '100%',
 					tooltip: tooltip,
 					press: function (e) { pop.openBy(e.getSource()); }
 				});
@@ -239,7 +237,6 @@
 					showMoreColorsButton: true,
 					showRecentColorsSection: true,
 					colorSelect: function (e) {
-						// 기본색 버튼을 누르면 빈 값으로 되돌려 테마 색을 그대로 쓰게 한다.
 						var isDefault = e.getParameter('defaultAction');
 						host.updateProp(propName, isDefault ? '' : e.getParameter('value'));
 						host._paintSwatch(propName);
@@ -248,14 +245,11 @@
 				btn.addEventDelegate({
 					onAfterRendering: function () { host._paintSwatch(propName); }
 				});
-				C[propName + 'Pop'] = pop;
 				return btn;
 			}
 
-			C.accentColor        = colorPicker('accentColor',        'Accent Color');
-			C.fontColor          = colorPicker('fontColor',          'Font Color');
-			C.controlBackground  = colorPicker('controlBackground',  'Control Background');
-			C.controlBorderColor = colorPicker('controlBorderColor', 'Control Border');
+			C.accentBtn = colorPicker('accentColor', 'Accent Color');
+			C.fontColor = colorPicker('fontColor',   'Font Color');
 
 			// ── Font Style ──
 			C.fontStyle = new Select({
@@ -285,6 +279,9 @@
 					host.updateProp('controlHeight', n);
 				}
 			});
+
+			C.controlBackground  = colorPicker('controlBackground',  'Control Background');
+			C.controlBorderColor = colorPicker('controlBorderColor', 'Control Border');
 
 			// ── Min / Max ──
 			function makeDate (propName) {
@@ -319,7 +316,8 @@
 				width: '100%',
 				items: [
 					field('Font Style:', C.fontStyle, 12),
-					new VBox({ items: [], layoutData: new FlexItemData({ growFactor: 18, baseSize: '0%' }) })
+					new VBox({ items: [], layoutData: new FlexItemData({ growFactor: 10, baseSize: '0%' }) }),
+					new VBox({ items: [], layoutData: new FlexItemData({ growFactor: 8, baseSize: '0%' }) })
 				]
 			});
 			// HBox 자식 사이 간격
@@ -332,7 +330,7 @@
 
 			var accentRow = new HBox({
 				width: '100%',
-				items: [ field('Accent Color:', C.accentColor, 10) ]
+				items: [ field('Accent Color:', C.accentBtn, 10) ]
 			});
 
 			// 섹션 사이 구분선. SAC 기본 스타일 패널과 같은 결.
@@ -542,11 +540,11 @@
 		}
 
 		// 버튼을 색 견본으로 쓴다.
-		// UI5 버튼은 바깥 요소가 아니라 안쪽 .sapMBtnInner 가 실제로 그려지므로
-		// 거기에 칠해야 한다. 바깥에 칠하면 테두리처럼 삐져나온다.
+		// UI5 버튼은 바깥이 아니라 안쪽 .sapMBtnInner 가 실제로 그려진다.
 		_paintSwatch (propName) {
-			if (!this._C || !this._C[propName]) return;
-			var root = this._C[propName].getDomRef();
+			if (!this._C) return;
+			var key  = (propName === 'accentColor') ? 'accentBtn' : propName;
+			var root = this._C[key] && this._C[key].getDomRef();
 			if (!root) return;
 			var el = root.querySelector('.sapMBtnInner') || root;
 			var v  = this._props[propName];
@@ -555,7 +553,6 @@
 			el.style.boxShadow = 'none';
 			el.style.minWidth  = '0';
 			el.style.background = v ? v :
-				// 값이 없으면 체크무늬로 '테마 기본'임을 나타낸다.
 				'linear-gradient(45deg,#ddd 25%,transparent 25%,transparent 75%,#ddd 75%) 0 0/8px 8px,' +
 				'linear-gradient(45deg,#ddd 25%,transparent 25%,transparent 75%,#ddd 75%) 4px 4px/8px 8px,' +
 				'#fff';
