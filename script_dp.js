@@ -22,7 +22,7 @@
 	'use strict';
 
 	var TAG   = 'com-sap-sac-datepicker-glp-main';
-	var BUILD = '2026-08-24 21:36 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
+	var BUILD = '2026-08-24 21:50 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
 	console.log('%c[datepicker] main build ' + BUILD, 'color:#346187;font-weight:bold');
 
 	// ────────────────────────────────────────────────────────────
@@ -253,7 +253,7 @@
 			// 또한 placeAt 대상 노드는 UIArea 가 내용을 관리하므로
 			// <style> 태그와 섞이지 않도록 분리한다.
 			host._mount = document.createElement('div');
-			host._mount.style.cssText = 'width:100%;flex:1 1 auto;';
+			host._mount.style.cssText = 'width:100%;flex:0 0 auto;';
 			host._container.appendChild(host._mount);
 
 			dp.placeAt(host._mount);
@@ -543,19 +543,24 @@
 			var h = this._controlHeight;
 			if (!h || h < 8) return '';
 
-			return u + '.sapMInputBaseHeightMargin { margin: 0 !important; }\n' +
-			       u + ',\n' +
-			       u + ' .sapMInputBaseContentWrapper {\n' +
+			// 주의: uid 클래스는 컨테이너 div 와 DatePicker 컨트롤 양쪽에 붙어 있다.
+			// 그냥 u 로 높이를 걸면 컨테이너까지 줄어들어 가운데 정렬할 공간이 사라진다.
+			// 컨트롤에만 있는 sapMInputBase 를 함께 써서 정확히 겨냥한다.
+			var c = u + '.sapMInputBase';
+
+			return c + '.sapMInputBaseHeightMargin { margin: 0 !important; }\n' +
+			       c + ',\n' +
+			       c + ' .sapMInputBaseContentWrapper {\n' +
 			       '\theight: ' + h + 'px !important;\n' +
 			       '\tmin-height: ' + h + 'px !important;\n' +
 			       '}\n' +
-			       u + ' .sapMInputBaseInner {\n' +
+			       c + ' .sapMInputBaseInner {\n' +
 			       '\theight: ' + h + 'px !important;\n' +
 			       '\tline-height: ' + h + 'px !important;\n' +
 			       '}\n' +
 			       // 아이콘도 함께 줄이지 않으면 세로 중심이 어긋나거나 밖으로 삐져나온다.
-			       u + ' .sapMInputBaseIconContainer,\n' +
-			       u + ' .sapMInputBaseIcon {\n' +
+			       c + ' .sapMInputBaseIconContainer,\n' +
+			       c + ' .sapMInputBaseIcon {\n' +
 			       '\theight: ' + h + 'px !important;\n' +
 			       '\tline-height: ' + h + 'px !important;\n' +
 			       '}\n';
