@@ -22,7 +22,7 @@
 	'use strict';
 
 	var TAG   = 'com-sap-sac-datepicker-glp-main';
-	var BUILD = '2026-08-24 22:29 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
+	var BUILD = '2026-08-24 22:35 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
 	console.log('%c[datepicker] main build ' + BUILD, 'color:#346187;font-weight:bold');
 
 	// ────────────────────────────────────────────────────────────
@@ -506,7 +506,19 @@
 				'\tborder: ' + (bc ? '1px solid ' + bc : '1px solid transparent') + ' !important;\n' +
 				'\tbox-shadow: none !important;\n' +
 				'}\n' +
-				c + ' .sapMInputBaseInner { background-color: transparent !important; }\n' +
+				// 글자 세로 정렬. controlHeight 지정 여부와 무관하게 항상 적용한다.
+				// 줄높이로만 맞추면 글꼴이 컨트롤 높이보다 클 때 글자가 아래로 밀려 잘린다.
+				// 줄높이는 글꼴을 따라가게 두고 정렬은 flex 로 처리한다.
+				c + ' .sapMInputBaseContentWrapper {\n' +
+				'\tdisplay: flex !important;\n' +
+				'\talign-items: center !important;\n' +
+				'}\n' +
+				c + ' .sapMInputBaseInner {\n' +
+				'\tbackground-color: transparent !important;\n' +
+				'\theight: auto !important;\n' +
+				'\tline-height: normal !important;\n' +
+				'\talign-self: center !important;\n' +
+				'}\n' +
 				c + ' .sapMInputBaseContentWrapper::before { display: none !important; }\n' +
 				c + ' .sapMInputBaseContentWrapper:has(.sapMInputBaseIcon:focus)::before { display: block !important; }\n';
 
@@ -564,17 +576,7 @@
 			       '\theight: ' + h + 'px !important;\n' +
 			       '\tmin-height: ' + h + 'px !important;\n' +
 			       '}\n' +
-			       // line-height 로만 맞추면 글꼴이 컨트롤 높이보다 클 때 글자가 아래로 밀린다.
-			       // 줄높이는 글꼴을 따라가게 두고, 세로 정렬은 래퍼의 flex 로 처리한다.
-			       c + ' .sapMInputBaseContentWrapper {\n' +
-			       '\tdisplay: flex !important;\n' +
-			       '\talign-items: center !important;\n' +
-			       '}\n' +
-			       c + ' .sapMInputBaseInner {\n' +
-			       '\theight: auto !important;\n' +
-			       '\tline-height: normal !important;\n' +
-			       '\talign-self: center !important;\n' +
-			       '}\n' +
+
 			       // 아이콘도 함께 줄이지 않으면 세로 중심이 어긋나거나 밖으로 삐져나온다.
 			       // 다만 line-height 만으로는 살짝 아래로 치우친다.
 			       // SAP-icons 글리프의 세로 기준선이 문자 상자 정중앙이 아니기 때문이다.
