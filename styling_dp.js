@@ -22,7 +22,7 @@
 	'use strict';
 
 	var TAG   = 'com-sap-sac-datepicker-glp-styling';
-	var BUILD = '2026-08-24 22:40 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
+	var BUILD = '2026-08-24 22:45 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
 	console.log('%c[datepicker] styling build ' + BUILD + ' (UI5)', 'color:#346187;font-weight:bold');
 
 	// 모드별 형식 선택지. key 가 실제 displayFormat 패턴.
@@ -115,8 +115,10 @@
 			'sap/m/CheckBox',
 			'sap/m/DatePicker',
 			'sap/ui/core/HTML',
-			'sap/m/Text'
-		], function (VBox, HBox, FlexItemData, Label, Select, Item, ComboBox, CheckBox, DatePicker, HTML, Text) {
+			'sap/m/Text',
+			'sap/m/Button',
+			'sap/m/ColorPalettePopover'
+		], function (VBox, HBox, FlexItemData, Label, Select, Item, ComboBox, CheckBox, DatePicker, HTML, Text, Button, ColorPalettePopover) {
 
 			if (token !== host._buildToken || !host._container || !host.isConnected) return;
 
@@ -254,34 +256,28 @@
 			});
 
 			// ── Accent Color ──
-			// 아이콘 · 팝업 헤더 · 선택 배경을 한꺼번에 바꾸는 색.
-			C.accentColor = new HTML({
-				content: "<div style='line-height:0'><input type='color' value='" +
-					(P.accentColor || DEFAULT_COLOR) +
-					"' style='width:100%;height:2.25rem;padding:2px;border:1px solid #bfbfbf;cursor:pointer;'></div>",
-				afterRendering: function () {
-					var dom   = this.getDomRef();
-					var input = dom && (dom.tagName === 'INPUT' ? dom : dom.querySelector('input'));
-					if (!input || input._dpBound) return;
-					input._dpBound = true;
-					input.addEventListener('change', function (ev) {
-						if (C.accentDefault) C.accentDefault.setSelected(false);
-						host.updateProp('accentColor', ev.target.value);
-					});
-				}
+			// SAC 기본 스타일 패널과 같은 계열인 sap.m.ColorPalettePopover 를 쓴다.
+			// 팔레트 안에 기본색 버튼이 들어 있어 'Use default' 체크박스가 필요 없다.
+			C.accentBtn = new Button({
+				width: '100%',
+				tooltip: 'Accent Color',
+				press: function (e) { C.accentPalette.openBy(e.getSource()); }
+			});
+			// 버튼 자체를 색 견본으로 쓴다. 렌더링 후 배경을 현재 값으로 칠한다.
+			C.accentBtn.addEventDelegate({
+				onAfterRendering: function () { host._paintAccentBtn(); }
 			});
 
-			C.accentDefault = new CheckBox({
-				text: 'Use default',
-				selected: !P.accentColor,
-				select: function (e) {
-					var on = e.getParameter('selected');
-					if (on) {
-						host.updateProp('accentColor', '');
-					} else {
-						var input = host._accentInput();
-						host.updateProp('accentColor', input ? input.value : DEFAULT_COLOR);
-					}
+			C.accentPalette = new ColorPalettePopover({
+				defaultColor: '#346187',
+				showDefaultColorButton: true,
+				showMoreColorsButton: true,
+				showRecentColorsSection: true,
+				colorSelect: function (e) {
+					// 기본색 버튼을 누르면 빈 값으로 되돌려 테마 색을 그대로 쓰게 한다.
+					var isDefault = e.getParameter('defaultAction');
+					host.updateProp('accentColor', isDefault ? '' : e.getParameter('value'));
+					host._paintAccentBtn();
 				}
 			});
 
@@ -381,13 +377,7 @@
 
 			var accentRow = new HBox({
 				width: '100%',
-				items: [
-					field('Accent Color:', C.accentColor,   10),
-					field(' ',             C.accentDefault, 18)
-				]
-			});
-			accentRow.getItems().forEach(function (it, i) {
-				if (i < 1) it.addStyleClass('sapUiTinyMarginEnd');
+				items: [ field('Accent Color:', C.accentBtn, 10) ]
 			});
 
 			// 섹션 사이 구분선. SAC 기본 스타일 패널과 같은 결.
@@ -604,11 +594,18 @@
 			C.format.setSelectedKey(this._props[FORMAT_PROP[mode]]);
 		}
 
-		_accentInput () {
-			if (!this._C || !this._C.accentColor) return null;
-			var dom = this._C.accentColor.getDomRef();
-			if (!dom) return null;
-			return dom.tagName === 'INPUT' ? dom : dom.querySelector('input');
+		// 버튼 배경을 현재 강조색으로 칠한다. 빈 값이면 '테마 기본' 표시로 둔다.
+		_paintAccentBtn () {
+			if (!this._C || !this._C.accentBtn) return;
+			var dom = this._C.accentBtn.getDomRef();
+			if (!dom) return;
+			var v = this._props.accentColor;
+			dom.style.backgroundColor = v || 'transparent';
+			dom.style.backgroundImage = v ? 'none' :
+				'linear-gradient(45deg,#ddd 25%,transparent 25%,transparent 75%,#ddd 75%),' +
+				'linear-gradient(45deg,#ddd 25%,transparent 25%,transparent 75%,#ddd 75%)';
+			dom.style.backgroundSize = v ? 'auto' : '8px 8px';
+			dom.style.backgroundPosition = v ? '0 0' : '0 0, 4px 4px';
 		}
 
 		_hintOf (key) {
@@ -645,9 +642,7 @@
 			var input = this._colorInput();
 			if (input) input.value = P.fontColor || DEFAULT_COLOR;
 
-			C.accentDefault.setSelected(!P.accentColor);
-			var ai = this._accentInput();
-			if (ai) ai.value = P.accentColor || DEFAULT_COLOR;
+			this._paintAccentBtn();
 
 			C.controlHeight.setValue(P.controlHeight ? String(P.controlHeight) : '');
 			['controlBackground', 'controlBorderColor'].forEach(function (k) {
