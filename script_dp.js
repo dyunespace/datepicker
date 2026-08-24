@@ -22,7 +22,7 @@
 	'use strict';
 
 	var TAG   = 'com-sap-sac-datepicker-glp-main';
-	var BUILD = '2026-08-24 22:14 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
+	var BUILD = '2026-08-24 22:25 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
 	console.log('%c[datepicker] main build ' + BUILD, 'color:#346187;font-weight:bold');
 
 	// ────────────────────────────────────────────────────────────
@@ -583,6 +583,9 @@
 			       '\tdisplay: flex !important;\n' +
 			       '\talign-items: center !important;\n' +
 			       '\tjustify-content: center !important;\n' +
+			       // 글리프가 여전히 1px 내려 보여 미세 보정.
+			       '\tposition: relative !important;\n' +
+			       '\ttop: -1px !important;\n' +
 			       '}\n';
 		}
 
