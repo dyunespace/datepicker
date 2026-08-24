@@ -22,7 +22,7 @@
 	'use strict';
 
 	var TAG   = 'com-sap-sac-datepicker-glp-styling';
-	var BUILD = '2026-08-24 22:45 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
+	var BUILD = '2026-08-24 22:49 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
 	console.log('%c[datepicker] styling build ' + BUILD + ' (UI5)', 'color:#346187;font-weight:bold');
 
 	// 모드별 형식 선택지. key 가 실제 displayFormat 패턴.
@@ -594,18 +594,28 @@
 			C.format.setSelectedKey(this._props[FORMAT_PROP[mode]]);
 		}
 
-		// 버튼 배경을 현재 강조색으로 칠한다. 빈 값이면 '테마 기본' 표시로 둔다.
+		// 버튼을 색 견본으로 쓴다.
+		// UI5 버튼은 바깥 요소가 아니라 안쪽 .sapMBtnInner 가 실제로 그려지므로
+		// 거기에 칠해야 한다. 바깥에 칠하면 테두리처럼 삐져나온다.
 		_paintAccentBtn () {
 			if (!this._C || !this._C.accentBtn) return;
-			var dom = this._C.accentBtn.getDomRef();
-			if (!dom) return;
-			var v = this._props.accentColor;
-			dom.style.backgroundColor = v || 'transparent';
-			dom.style.backgroundImage = v ? 'none' :
-				'linear-gradient(45deg,#ddd 25%,transparent 25%,transparent 75%,#ddd 75%),' +
-				'linear-gradient(45deg,#ddd 25%,transparent 25%,transparent 75%,#ddd 75%)';
-			dom.style.backgroundSize = v ? 'auto' : '8px 8px';
-			dom.style.backgroundPosition = v ? '0 0' : '0 0, 4px 4px';
+			var root = this._C.accentBtn.getDomRef();
+			if (!root) return;
+			var el = root.querySelector('.sapMBtnInner') || root;
+			var v  = this._props.accentColor;
+
+			el.style.border = '1px solid #bfbfbf';
+			el.style.boxShadow = 'none';
+			el.style.minWidth = '0';
+			if (v) {
+				el.style.background = v;
+			} else {
+				// 값이 없으면 체크무늬로 '테마 기본'임을 나타낸다.
+				el.style.background =
+					'linear-gradient(45deg,#ddd 25%,transparent 25%,transparent 75%,#ddd 75%) 0 0/8px 8px,' +
+					'linear-gradient(45deg,#ddd 25%,transparent 25%,transparent 75%,#ddd 75%) 4px 4px/8px 8px,' +
+					'#fff';
+			}
 		}
 
 		_hintOf (key) {
