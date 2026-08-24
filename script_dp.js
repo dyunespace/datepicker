@@ -22,7 +22,7 @@
 	'use strict';
 
 	var TAG   = 'com-sap-sac-datepicker-glp-main';
-	var BUILD = '2026-08-24 22:35 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
+	var BUILD = '2026-08-25 08:03 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
 	console.log('%c[datepicker] main build ' + BUILD, 'color:#346187;font-weight:bold');
 
 	// ────────────────────────────────────────────────────────────
@@ -66,9 +66,6 @@
 	function normMode (v) {
 		return MODES[v] ? v : 'day';
 	}
-
-	// 모드별 기본 표시 형식. day 의 '' 는 로케일 자동(Automatic).
-	var DEFAULT_FORMAT = { day: '', week: 'YYYY.ww', month: 'yyyy.MM' };
 
 	// ────────────────────────────────────────────────────────────
 	// <2> 주차 계산 (로케일에 의존하지 않는 자체 구현)
@@ -172,15 +169,6 @@
 		var back = calcWeek(d, rule);
 		if (back.year !== g[0] || back.week !== g[1]) return null;
 		return d;
-	}
-
-	// 패턴이 어떤 종류의 값을 표현하는지 심볼로 판단한다.
-	function patternFits (pat, kind) {
-		var p = String(pat).replace(/'[^']*'/g, '');   // 따옴표 리터럴 제외
-		var hasDay = /d/.test(p), hasWeek = /w/.test(p), hasMonth = /M/.test(p);
-		if (kind === 'week')  return hasWeek;
-		if (kind === 'month') return hasMonth && !hasDay && !hasWeek;
-		return hasDay;
 	}
 
 	// ────────────────────────────────────────────────────────────
