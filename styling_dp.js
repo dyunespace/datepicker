@@ -22,7 +22,7 @@
 	'use strict';
 
 	var TAG   = 'com-sap-sac-datepicker-glp-styling';
-	var BUILD = '2026-08-24 22:35 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
+	var BUILD = '2026-08-24 22:40 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
 	console.log('%c[datepicker] styling build ' + BUILD + ' (UI5)', 'color:#346187;font-weight:bold');
 
 	// 모드별 형식 선택지. key 가 실제 displayFormat 패턴.
@@ -204,9 +204,12 @@
 				width: '100%',
 				value: P.fontSize ? String(P.fontSize) : '',
 				placeholder: 'Default',
-				items: FONT_SIZES.map(function (n) {
-					return new Item({ key: String(n), text: String(n) });
-				}),
+				// 값을 지운다는 뜻의 항목을 맨 위에 둔다.
+				// 정수 프로퍼티는 빈 값을 표현할 수 없어 0 을 '미지정'으로 쓴다.
+				items: [new Item({ key: '', text: 'Default' })].concat(
+					FONT_SIZES.map(function (n) {
+						return new Item({ key: String(n), text: String(n) });
+					})),
 				change: function (e) {
 					var raw = String(e.getSource().getValue()).replace(/[^0-9]/g, '');
 					var n   = raw === '' ? 0 : Math.min(96, Math.max(6, parseInt(raw, 10)));
@@ -298,9 +301,10 @@
 				width: '100%',
 				value: P.controlHeight ? String(P.controlHeight) : '',
 				placeholder: 'Default',
-				items: [16, 18, 20, 21, 22, 24, 26, 28, 32].map(function (n) {
-					return new Item({ key: String(n), text: String(n) });
-				}),
+				items: [new Item({ key: '', text: 'Default' })].concat(
+					[16, 18, 20, 21, 22, 24, 26, 28, 32, 40, 48, 60].map(function (n) {
+						return new Item({ key: String(n), text: String(n) });
+					})),
 				change: function (e) {
 					var raw = String(e.getSource().getValue()).replace(/[^0-9]/g, '');
 					var n   = raw === '' ? 0 : Math.min(200, Math.max(8, parseInt(raw, 10)));
