@@ -22,7 +22,7 @@
 	'use strict';
 
 	var TAG   = 'com-sap-sac-datepicker-glp-styling';
-	var BUILD = '2026-08-25 08:03 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
+	var BUILD = '2026-08-25 08:16 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
 	console.log('%c[datepicker] styling build ' + BUILD + ' (UI5)', 'color:#346187;font-weight:bold');
 
 	// 모드별 형식 선택지. key 가 실제 displayFormat 패턴.
@@ -332,7 +332,7 @@
 
 			var accentRow = new HBox({
 				width: '100%',
-				items: [ field('Accent Color:', C.accentBtn, 10) ]
+				items: [ field('Accent Color:', C.accentColor, 10) ]
 			});
 
 			// 섹션 사이 구분선. SAC 기본 스타일 패널과 같은 결.
