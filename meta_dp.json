@@ -12,14 +12,14 @@
 		{
 			"kind": "main",
 			"tag": "com-sap-sac-datepicker-glp-main",
-			"url": "https://dyunespace.github.io/datepicker/script_dp.js?v=20260824b",
+			"url": "https://dyunespace.github.io/datepicker/script_dp.js?v=20260824c",
 			"integrity": "",
 			"ignoreIntegrity": true
 		},
 		{
 			"kind": "styling",
 			"tag": "com-sap-sac-datepicker-glp-styling",
-			"url": "https://dyunespace.github.io/datepicker/styling_dp.js?v=20260824b",
+			"url": "https://dyunespace.github.io/datepicker/styling_dp.js?v=20260824c",
 			"integrity": "",
 			"ignoreIntegrity": true
 		}
@@ -38,6 +38,16 @@
 			"type": "integer",
 			"default": 0,
 			"description": "height of the input control in px, drawn vertically centred inside the widget box. 0 keeps the UI5 default. use this to make the control thinner than the 32px widget minimum, the way SAC's own dropdown uses margins"
+		},
+		"controlBackground": {
+			"type": "string",
+			"default": "",
+			"description": "background colour of the input control as hex. empty = transparent, letting the SAC widget background show through"
+		},
+		"controlBorderColor": {
+			"type": "string",
+			"default": "",
+			"description": "border colour of the input control as hex, drawn 1px. empty = no border"
 		},
 		"dateVal": {
 			"type": "Date",
