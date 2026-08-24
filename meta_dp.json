@@ -1,6 +1,6 @@
 {
 	"eula": "",
-	"vendor": "dyunespace",
+	"vendor": "Jun",
 	"license": "",
 	"id": "com.sap.sac.datepicker.glp",
 	"version": "1.0.0",
@@ -12,14 +12,14 @@
 		{
 			"kind": "main",
 			"tag": "com-sap-sac-datepicker-glp-main",
-			"url": "https://dyunespace.github.io/datepicker/script_dp.js?v=20260822e",
+			"url": "https://dyunespace.github.io/datepicker/script_dp.js?v=20260824a",
 			"integrity": "",
 			"ignoreIntegrity": true
 		},
 		{
 			"kind": "styling",
 			"tag": "com-sap-sac-datepicker-glp-styling",
-			"url": "https://dyunespace.github.io/datepicker/styling_dp.js?v=20260822e",
+			"url": "https://dyunespace.github.io/datepicker/styling_dp.js?v=20260824a",
 			"integrity": "",
 			"ignoreIntegrity": true
 		}
@@ -31,7 +31,8 @@
 		},
 		"height": {
 			"type": "integer",
-			"default": 32
+			"default": 26,
+			"description": "widget height in px. SAC also uses this value as the minimum height in the styling panel"
 		},
 		"dateVal": {
 			"type": "Date",
