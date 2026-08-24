@@ -22,7 +22,7 @@
 	'use strict';
 
 	var TAG   = 'com-sap-sac-datepicker-glp-styling';
-	var BUILD = '2026-08-24 21:36 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
+	var BUILD = '2026-08-24 22:06 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
 	console.log('%c[datepicker] styling build ' + BUILD + ' (UI5)', 'color:#346187;font-weight:bold');
 
 	// 모드별 형식 선택지. key 가 실제 displayFormat 패턴.
@@ -310,6 +310,26 @@
 				}
 			});
 
+			// ── Control Border / Background ──
+			function colorField (propName, initial) {
+				var html = new HTML({
+					content: "<div style='line-height:0'><input type='color' value='" + (initial || '#ffffff') +
+						"' style='width:100%;height:2.25rem;padding:2px;border:1px solid #bfbfbf;cursor:pointer;'></div>",
+					afterRendering: function () {
+						var dom   = this.getDomRef();
+						var input = dom && (dom.tagName === 'INPUT' ? dom : dom.querySelector('input'));
+						if (!input || input._dpBound) return;
+						input._dpBound = true;
+						input.addEventListener('change', function (ev) {
+							host.updateProp(propName, ev.target.value);
+						});
+					}
+				});
+				return html;
+			}
+			C.controlBackground  = colorField('controlBackground',  P.controlBackground);
+			C.controlBorderColor = colorField('controlBorderColor', P.controlBorderColor);
+
 			// ── Min / Max ──
 			function makeDate (propName) {
 				return new DatePicker({
@@ -358,12 +378,34 @@
 			var accentRow = new HBox({
 				width: '100%',
 				items: [
-					field('Accent Color:', C.accentColor,   12),
+					field('Accent Color:', C.accentColor,   10),
 					field(' ',             C.accentDefault, 18)
 				]
 			});
 			accentRow.getItems().forEach(function (it, i) {
 				if (i < 1) it.addStyleClass('sapUiTinyMarginEnd');
+			});
+
+			// 섹션 사이 구분선. SAC 기본 스타일 패널과 같은 결.
+			function sep () {
+				return new HTML({ content: "<div style='border-top:1px solid #d9d9d9;margin:12px 0 4px 0'></div>" });
+			}
+			function head (t) {
+				var lb = new Label({ text: t });
+				lb.addStyleClass('sapUiTinyMarginTop');
+				return lb;
+			}
+
+			var controlRow = new HBox({
+				width: '100%',
+				items: [
+					field('Height:',     C.controlHeight,      10),
+					field('Border:',     C.controlBorderColor,  8),
+					field('Background:', C.controlBackground,   8)
+				]
+			});
+			controlRow.getItems().forEach(function (it, i) {
+				if (i < 2) it.addStyleClass('sapUiTinyMarginEnd');
 			});
 
 			var root = new VBox({
@@ -373,10 +415,16 @@
 					field('Date Format:', C.format),
 					C.weekRuleField,
 					C.weekHint,
+
+					sep(), head('Control Style'),
+					controlRow,
+					accentRow,
+
+					sep(), head('Font'),
 					fontRow,
 					styleRow,
-					accentRow,
-					field('Control Height:', C.controlHeight),
+
+					sep(), head('Date Range'),
 					field('Minimum Date Value:', C.minDate),
 					field('Maximum Date Value:', C.maxDate)
 				]
@@ -420,6 +468,8 @@
 				fontColor:   '',
 				accentColor: '',
 				controlHeight: 0,
+				controlBackground: '',
+				controlBorderColor: '',
 				minDateVal:  null,
 				maxDateVal:  null
 			};
@@ -492,6 +542,8 @@
 		set fontColor   (v) { this._prop('fontColor',   v || ''); }
 		set accentColor (v) { this._prop('accentColor', v || ''); }
 		set controlHeight (v) { this._prop('controlHeight', Number(v) || 0); }
+		set controlBackground  (v) { this._prop('controlBackground',  v || ''); }
+		set controlBorderColor (v) { this._prop('controlBorderColor', v || ''); }
 		set minDateVal  (v) { this._prop('minDateVal',  v || null); }
 		set maxDateVal  (v) { this._prop('maxDateVal',  v || null); }
 
@@ -506,6 +558,8 @@
 		get fontColor   () { return this._props.fontColor; }
 		get accentColor () { return this._props.accentColor; }
 		get controlHeight () { return this._props.controlHeight; }
+		get controlBackground  () { return this._props.controlBackground; }
+		get controlBorderColor () { return this._props.controlBorderColor; }
 		get minDateVal  () { return this._props.minDateVal; }
 		get maxDateVal  () { return this._props.maxDateVal; }
 
@@ -592,6 +646,11 @@
 			if (ai) ai.value = P.accentColor || DEFAULT_COLOR;
 
 			C.controlHeight.setValue(P.controlHeight ? String(P.controlHeight) : '');
+			['controlBackground', 'controlBorderColor'].forEach(function (k) {
+				var dom = C[k] && C[k].getDomRef();
+				var inp = dom && (dom.tagName === 'INPUT' ? dom : dom.querySelector('input'));
+				if (inp && P[k]) inp.value = P[k];
+			});
 
 			C.minDate.setValue(toInputValue(this._toDate(P.minDateVal)));
 			C.maxDate.setValue(toInputValue(this._toDate(P.maxDateVal)));
