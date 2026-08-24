@@ -22,7 +22,7 @@
 	'use strict';
 
 	var TAG   = 'com-sap-sac-datepicker-glp-main';
-	var BUILD = '2026-08-24 08:38 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
+	var BUILD = '2026-08-24 21:36 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
 	console.log('%c[datepicker] main build ' + BUILD, 'color:#346187;font-weight:bold');
 
 	// ────────────────────────────────────────────────────────────
@@ -289,6 +289,7 @@
 			this._fontSize   = 0;
 			this._fontStyle  = 'Regular';
 			this._fontColor  = '';
+			this._controlHeight = 0;
 			this._accentColor = '';
 			this._dateVal    = null;
 			this._minDateVal = null;
@@ -372,6 +373,7 @@
 			if ('fontStyle'  in changed) { this._fontStyle  = changed.fontStyle || 'Regular'; }
 			if ('fontColor'  in changed) { this._fontColor  = changed.fontColor || ''; }
 			if ('accentColor' in changed) { this._accentColor = changed.accentColor || ''; }
+			if ('controlHeight' in changed) { this._controlHeight = Number(changed.controlHeight) || 0; }
 
 			if (!this._dp) return;
 
@@ -490,7 +492,11 @@
 				u + ' .sapMInputBaseContentWrapper:active {\n' +
 				'\tborder-color: transparent !important;\n' +
 				'\tbox-shadow: none !important;\n' +
+				// 배경을 비워 SAC 위젯의 배경색과 모서리 곡선이 그대로 드러나게 한다.
+				// 이 배경은 위젯 바깥 요소(__panel91)가 그리므로 우리는 가리지만 않으면 된다.
+				'\tbackground-color: transparent !important;\n' +
 				'}\n' +
+				u + ' .sapMInputBaseInner { background-color: transparent !important; }\n' +
 				u + ' .sapMInputBaseContentWrapper::before { display: none !important; }\n' +
 				u + ' .sapMInputBaseContentWrapper:has(.sapMInputBaseIcon:focus)::before { display: block !important; }\n';
 
@@ -519,8 +525,40 @@
 			css += pop + ' .sapMPopoverCont,\n' +
 			       pop + ' .sapMPopoverScroll { text-align: center; }\n';
 
+			css += this._controlHeightCss(u);
 			css += this._accentCss(u);
 			this._styleEl.textContent = css;
+		}
+
+		// 입력 컨트롤 높이.
+		//
+		// SAC 는 커스텀 위젯에 32px 하한을 걸어서 위젯 상자를 그보다 얇게 만들 수 없다.
+		// SAC 기본 드롭다운도 마찬가지인데, 상자는 32 로 두고 Margin 으로 안쪽 여백을
+		// 만들어 컨트롤만 얇게 그린다. 여기서도 같은 방식을 쓴다.
+		//
+		// UI5 는 sapMInputBaseHeightMargin 으로 위아래 0.1875rem(3px) 여백을 자동으로 준다.
+		// Compact 입력창 26 + 3 + 3 = 32 라서 기본 상태가 딱 맞아떨어진다.
+		// 높이를 직접 지정할 때는 그 자동 여백을 걷어내고 우리 값으로 그린다.
+		_controlHeightCss (u) {
+			var h = this._controlHeight;
+			if (!h || h < 8) return '';
+
+			return u + '.sapMInputBaseHeightMargin { margin: 0 !important; }\n' +
+			       u + ',\n' +
+			       u + ' .sapMInputBaseContentWrapper {\n' +
+			       '\theight: ' + h + 'px !important;\n' +
+			       '\tmin-height: ' + h + 'px !important;\n' +
+			       '}\n' +
+			       u + ' .sapMInputBaseInner {\n' +
+			       '\theight: ' + h + 'px !important;\n' +
+			       '\tline-height: ' + h + 'px !important;\n' +
+			       '}\n' +
+			       // 아이콘도 함께 줄이지 않으면 세로 중심이 어긋나거나 밖으로 삐져나온다.
+			       u + ' .sapMInputBaseIconContainer,\n' +
+			       u + ' .sapMInputBaseIcon {\n' +
+			       '\theight: ' + h + 'px !important;\n' +
+			       '\tline-height: ' + h + 'px !important;\n' +
+			       '}\n';
 		}
 
 		// 팝업 컨트롤을 찾아 uid 클래스를 붙인다.
