@@ -22,7 +22,7 @@
 	'use strict';
 
 	var TAG   = 'com-sap-sac-datepicker-glp-main';
-	var BUILD = '2026-08-24 21:50 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
+	var BUILD = '2026-08-24 22:06 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
 	console.log('%c[datepicker] main build ' + BUILD, 'color:#346187;font-weight:bold');
 
 	// ────────────────────────────────────────────────────────────
@@ -290,6 +290,8 @@
 			this._fontStyle  = 'Regular';
 			this._fontColor  = '';
 			this._controlHeight = 0;
+			this._controlBackground = '';
+			this._controlBorderColor = '';
 			this._accentColor = '';
 			this._dateVal    = null;
 			this._minDateVal = null;
@@ -374,6 +376,8 @@
 			if ('fontColor'  in changed) { this._fontColor  = changed.fontColor || ''; }
 			if ('accentColor' in changed) { this._accentColor = changed.accentColor || ''; }
 			if ('controlHeight' in changed) { this._controlHeight = Number(changed.controlHeight) || 0; }
+			if ('controlBackground'  in changed) { this._controlBackground  = changed.controlBackground || ''; }
+			if ('controlBorderColor' in changed) { this._controlBorderColor = changed.controlBorderColor || ''; }
 
 			if (!this._dp) return;
 
@@ -485,20 +489,26 @@
 			//    입력창에는 깜빡이는 커서가 있어 없어도 위치를 알 수 있으므로 숨긴다.
 			//    다만 캘린더 아이콘은 커서가 없어서, 아이콘에 포커스가 갔을 때만 되살린다.
 			//    :has() 를 모르는 브라우저에서는 이 줄이 무시되어 '항상 숨김'이 된다.
+			var c = u + '.sapMInputBase';
+
+			// SAC 위젯 상자의 배경·테두리는 32px 영역 전체에 그려져 컨트롤 높이를 따라오지 못한다.
+			// 그래서 SAC 기본 드롭다운처럼 컨트롤이 자기 배경과 테두리를 직접 그린다.
+			// UI5 기본 테두리·그림자·포커스 표시는 걷어내고 우리 값으로 다시 칠한다.
+			var bg = this._controlBackground || 'transparent';
+			var bc = this._controlBorderColor;
+
 			var css =
 				u + ' { margin: 0; }\n' +
-				u + ' .sapMInputBaseContentWrapper,\n' +
-				u + ' .sapMInputBaseContentWrapper:hover,\n' +
-				u + ' .sapMInputBaseContentWrapper:active {\n' +
-				'\tborder-color: transparent !important;\n' +
+				c + ' .sapMInputBaseContentWrapper,\n' +
+				c + ' .sapMInputBaseContentWrapper:hover,\n' +
+				c + ' .sapMInputBaseContentWrapper:active {\n' +
+				'\tbackground-color: ' + bg + ' !important;\n' +
+				'\tborder: ' + (bc ? '1px solid ' + bc : '1px solid transparent') + ' !important;\n' +
 				'\tbox-shadow: none !important;\n' +
-				// 배경을 비워 SAC 위젯의 배경색과 모서리 곡선이 그대로 드러나게 한다.
-				// 이 배경은 위젯 바깥 요소(__panel91)가 그리므로 우리는 가리지만 않으면 된다.
-				'\tbackground-color: transparent !important;\n' +
 				'}\n' +
-				u + ' .sapMInputBaseInner { background-color: transparent !important; }\n' +
-				u + ' .sapMInputBaseContentWrapper::before { display: none !important; }\n' +
-				u + ' .sapMInputBaseContentWrapper:has(.sapMInputBaseIcon:focus)::before { display: block !important; }\n';
+				c + ' .sapMInputBaseInner { background-color: transparent !important; }\n' +
+				c + ' .sapMInputBaseContentWrapper::before { display: none !important; }\n' +
+				c + ' .sapMInputBaseContentWrapper:has(.sapMInputBaseIcon:focus)::before { display: block !important; }\n';
 
 			// 글꼴은 입력 필드 글자에만 적용한다.
 			// 팝업 캘린더는 SAC 화면 최상단에 따로 그려져 이 스코프 밖이며,
