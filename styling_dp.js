@@ -22,7 +22,7 @@
 	'use strict';
 
 	var TAG   = 'com-sap-sac-datepicker-glp-styling';
-	var BUILD = '2026-08-22 21:28 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
+	var BUILD = '2026-08-24 21:36 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
 	console.log('%c[datepicker] styling build ' + BUILD + ' (UI5)', 'color:#346187;font-weight:bold');
 
 	// 모드별 형식 선택지. key 가 실제 displayFormat 패턴.
@@ -292,6 +292,24 @@
 				}
 			});
 
+			// ── Control Height ──
+			// SAC 위젯 상자는 32 아래로 못 내려가므로, 상자 안에서 컨트롤만 얇게 그린다.
+			C.controlHeight = new ComboBox({
+				width: '100%',
+				value: P.controlHeight ? String(P.controlHeight) : '',
+				placeholder: 'Default',
+				items: [16, 18, 20, 21, 22, 24, 26, 28, 32].map(function (n) {
+					return new Item({ key: String(n), text: String(n) });
+				}),
+				change: function (e) {
+					var raw = String(e.getSource().getValue()).replace(/[^0-9]/g, '');
+					var n   = raw === '' ? 0 : Math.min(200, Math.max(8, parseInt(raw, 10)));
+					if (isNaN(n)) n = 0;
+					e.getSource().setValue(n ? String(n) : '');
+					host.updateProp('controlHeight', n);
+				}
+			});
+
 			// ── Min / Max ──
 			function makeDate (propName) {
 				return new DatePicker({
@@ -358,6 +376,7 @@
 					fontRow,
 					styleRow,
 					accentRow,
+					field('Control Height:', C.controlHeight),
 					field('Minimum Date Value:', C.minDate),
 					field('Maximum Date Value:', C.maxDate)
 				]
@@ -400,6 +419,7 @@
 				fontStyle:   'Regular',
 				fontColor:   '',
 				accentColor: '',
+				controlHeight: 0,
 				minDateVal:  null,
 				maxDateVal:  null
 			};
@@ -471,6 +491,7 @@
 		set fontStyle   (v) { this._prop('fontStyle',   v || 'Regular'); }
 		set fontColor   (v) { this._prop('fontColor',   v || ''); }
 		set accentColor (v) { this._prop('accentColor', v || ''); }
+		set controlHeight (v) { this._prop('controlHeight', Number(v) || 0); }
 		set minDateVal  (v) { this._prop('minDateVal',  v || null); }
 		set maxDateVal  (v) { this._prop('maxDateVal',  v || null); }
 
@@ -484,6 +505,7 @@
 		get fontStyle   () { return this._props.fontStyle; }
 		get fontColor   () { return this._props.fontColor; }
 		get accentColor () { return this._props.accentColor; }
+		get controlHeight () { return this._props.controlHeight; }
 		get minDateVal  () { return this._props.minDateVal; }
 		get maxDateVal  () { return this._props.maxDateVal; }
 
@@ -568,6 +590,8 @@
 			C.accentDefault.setSelected(!P.accentColor);
 			var ai = this._accentInput();
 			if (ai) ai.value = P.accentColor || DEFAULT_COLOR;
+
+			C.controlHeight.setValue(P.controlHeight ? String(P.controlHeight) : '');
 
 			C.minDate.setValue(toInputValue(this._toDate(P.minDateVal)));
 			C.maxDate.setValue(toInputValue(this._toDate(P.maxDateVal)));
