@@ -22,7 +22,7 @@
 	'use strict';
 
 	var TAG   = 'com-sap-sac-datepicker-glp-main';
-	var BUILD = '2026-08-24 22:25 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
+	var BUILD = '2026-08-24 22:29 KST';   // 배포할 때마다 갱신. 콘솔에서 반영 여부를 확인한다.
 	console.log('%c[datepicker] main build ' + BUILD, 'color:#346187;font-weight:bold');
 
 	// ────────────────────────────────────────────────────────────
@@ -564,9 +564,16 @@
 			       '\theight: ' + h + 'px !important;\n' +
 			       '\tmin-height: ' + h + 'px !important;\n' +
 			       '}\n' +
+			       // line-height 로만 맞추면 글꼴이 컨트롤 높이보다 클 때 글자가 아래로 밀린다.
+			       // 줄높이는 글꼴을 따라가게 두고, 세로 정렬은 래퍼의 flex 로 처리한다.
+			       c + ' .sapMInputBaseContentWrapper {\n' +
+			       '\tdisplay: flex !important;\n' +
+			       '\talign-items: center !important;\n' +
+			       '}\n' +
 			       c + ' .sapMInputBaseInner {\n' +
-			       '\theight: ' + h + 'px !important;\n' +
-			       '\tline-height: ' + h + 'px !important;\n' +
+			       '\theight: auto !important;\n' +
+			       '\tline-height: normal !important;\n' +
+			       '\talign-self: center !important;\n' +
 			       '}\n' +
 			       // 아이콘도 함께 줄이지 않으면 세로 중심이 어긋나거나 밖으로 삐져나온다.
 			       // 다만 line-height 만으로는 살짝 아래로 치우친다.
